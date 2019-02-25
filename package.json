@@ -1,0 +1,34 @@
+{
+  "name": "root_server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "bin": {
+    "air-m2-builder2": "./bin/server.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@vcs.bingo-boom.ru:ag_shelkoudenko/root_server.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "air-html": "^0.1.10",
+    "air-m2": "^0.5.6",
+    "air-m2-builder": "^0.1.47",
+    "express": "^4.16.4",
+    "html-webpack-plugin": "^3.2.0"
+  },
+  "devDependencies": {
+    "webpack": "^4.29.0",
+    "webpack-cli": "^3.2.1"
+  },
+  "m2units": {
+    "gamex-master": "git+ssh://git@vcs.bingo-boom.ru:gamex/gamex-master.git",
+    "gamex-master-view": "git+ssh://git@vcs.bingo-boom.ru:gamex/gamex-master-view.git"
+  }
+}
