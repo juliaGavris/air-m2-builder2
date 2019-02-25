@@ -64,7 +64,7 @@ if (fs.existsSync(pkgjsonPath)) {
   }
 }
 
-const masterPath = `${dirname}/${master === currentName ? "" : `node_modules/${master}/`}master/m2.js`;
+const masterPath = `${dirname}/${master === currentName ? "" : `node_modules/${master}/`}src/m2.js`;
 if (!fs.existsSync(masterPath)) {
   throw `Error: Cannot find 'm2.js' on source '${masterPath}'`;
 }
