@@ -1,5 +1,5 @@
 {
-  "name": "root_server",
+  "name": "air-m2-builder2",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -11,7 +11,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git@vcs.bingo-boom.ru:ag_shelkoudenko/root_server.git"
+    "url": "git@github.com:artifishional/air-m2-builder2.git"
   },
   "keywords": [],
   "author": "",
