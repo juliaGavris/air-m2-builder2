@@ -12,7 +12,7 @@ module.exports = function(mode, dirname, masterPath) {
       new HtmlWebpackPlugin({
         inject: false,
         hash: true,
-        template: `${__dirname}/src/m2.html`,
+        template: masterPath.replace(/\.js$/g, ".html"),
         filename: "index.html"
       })
     ]
