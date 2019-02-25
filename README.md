@@ -31,6 +31,7 @@
 
 ```json
 {
-  "port": 9000
+  "port": 9000,
+  "master": "master-module"
 }
 ```
