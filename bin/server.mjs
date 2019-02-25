@@ -56,11 +56,13 @@ if (fs.existsSync(`${dirname}/package.json`)) {
     utils.addUnique(optional, additionals);
   }
 }
-const pkgjsonPath = `${dirname}/node_modules/root_server/package.json`;
-if (fs.existsSync(pkgjsonPath)) {
-  const additionals = utils.getAdditional(pkgjsonPath, units.requires);
-  if (additionals != null) {
-    optional.push(...additionals);
+if (master !== currentName) {
+  const pkgjsonPath = `${dirname}/node_modules/${master}/package.json`;
+  if (fs.existsSync(pkgjsonPath)) {
+    const additionals = utils.getAdditional(pkgjsonPath, units.requires);
+    if (additionals != null) {
+      utils.addUnique(optional, additionals);
+    }
   }
 }
 

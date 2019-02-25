@@ -26,9 +26,5 @@
   "devDependencies": {
     "webpack": "^4.29.0",
     "webpack-cli": "^3.2.1"
-  },
-  "m2units": {
-    "gamex-master": "git+ssh://git@vcs.bingo-boom.ru:gamex/gamex-master.git",
-    "gamex-master-view": "git+ssh://git@vcs.bingo-boom.ru:gamex/gamex-master-view.git"
   }
 }
