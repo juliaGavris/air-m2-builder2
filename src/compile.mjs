@@ -6,12 +6,8 @@ export default class Compile {
   constructor() {}
 
   go(opt) {
-    const { dirname, module, units, force = false } = opt;
-
-    if (force || !fs.existsSync(dirname + `/node_modules/${module}/${units.dir}/index.js`)) {
-      if (this.config(opt)) {
-        return this.run();
-      }
+    if (this.config(opt)) {
+      return this.run();
     }
 
     opt.resources = true;
