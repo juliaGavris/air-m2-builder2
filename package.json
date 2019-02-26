@@ -19,11 +19,8 @@
   "dependencies": {
     "air-html": "^0.1.10",
     "air-m2": "^0.5.6",
-    "air-m2-builder": "^0.1.47",
-    "express": "^4.16.4",
-    "html-webpack-plugin": "^3.2.0"
-  },
-  "devDependencies": {
+    "copyfiles": "^2.0.0",
+    "html-webpack-plugin": "^3.2.0",
     "webpack": "^4.29.0",
     "webpack-cli": "^3.2.1"
   }
