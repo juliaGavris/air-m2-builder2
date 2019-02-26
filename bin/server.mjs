@@ -89,7 +89,7 @@ webpack(webpackConfig(mode, dirname, masterPath)).run(function(err) {
       headers: { "Access-Control-Allow-Origin": "*" },
       disableHostCheck: true,
       stats: { colors: true },
-      contentBase: `${dirname}/node_modules/root_server/dist`,
+      contentBase: `${dirname}/node_modules/air-m2-builder2/dist`,
       publicPath: `/${units.dirS}/`,
       hot: true,
       inline: true,
