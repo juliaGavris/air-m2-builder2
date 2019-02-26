@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "patch": "npm version patch && npm publish && git push origin",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "bin": {
