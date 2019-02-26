@@ -22,8 +22,10 @@ const gameConfigFilename = "air-m2.config.json";
 const gameConfigPath = `${dirname}/${gameConfigFilename}`;
 
 let buildMode;
+let toBuild = true;
 if (process.argv[2] === undefined) {
   buildMode = "dev";
+  toBuild = false;
 } else {
   const buildArgs = process.argv[2].split(":");
   if (buildArgs[0] !== "--build") {
@@ -101,7 +103,7 @@ webpack(webpackConfig(mode, dirname, masterPath)).run(function(err) {
   };
   const compiler = webpack(webpackCompileConfig(compileOpt));
 
-  if (buildMode === "prod") {
+  if (toBuild) {
     prod({ dirname, currentName, units, optional });
   } else {
     const server = new WebpackDevServer(compiler, {
