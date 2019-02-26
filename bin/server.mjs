@@ -10,6 +10,9 @@ import after from "../src/app.mjs";
 import prod from "../src/prod.mjs";
 import utils from "../src/utils.mjs";
 
+const BUILDER_NAME = "air-m2-builder2";
+const PKG_REQUIRED_BY = "_requiredBy";
+
 const dirname = path.resolve(path.dirname(""));
 const currentName = dirname.match(/[-\w]+$/)[0];
 const units = { dir: "m2unit", requires: "m2units" };
@@ -35,11 +38,27 @@ if (process.argv[2] === undefined) {
 
 const mode = buildMode === "prod" ? "production" : "development";
 let port = 9000;
-let master = currentName;
+let master = null;
 if (fs.existsSync(gameConfigPath)) {
   const json = JSON.parse(fs.readFileSync(gameConfigPath, "utf8"));
   port = json.port || port;
-  master = json.master || master;
+  if (json.hasOwnProperty("master")) {
+    master = json.master;
+  }
+}
+
+const pkgjsonPath = `${dirname}/node_modules/${BUILDER_NAME}/package.json`;
+if (master === null && fs.existsSync(pkgjsonPath)) {
+  const json = JSON.parse(fs.readFileSync(pkgjsonPath, "utf8"));
+  if (
+    json.hasOwnProperty(PKG_REQUIRED_BY) &&
+    json[PKG_REQUIRED_BY] instanceof Array &&
+    json[PKG_REQUIRED_BY].length > 0
+  ) {
+    master = json[PKG_REQUIRED_BY][0].match(/[\w-]+$/g)[0];
+  } else {
+    throw "Error: Cannot find source of 'm2.js' file.";
+  }
 }
 
 const optional = [];
@@ -89,7 +108,7 @@ webpack(webpackConfig(mode, dirname, masterPath)).run(function(err) {
       headers: { "Access-Control-Allow-Origin": "*" },
       disableHostCheck: true,
       stats: { colors: true },
-      contentBase: `${dirname}/node_modules/air-m2-builder2/dist`,
+      contentBase: `${dirname}/node_modules/${BUILDER_NAME}/dist`,
       publicPath: `/${units.dirS}/`,
       hot: true,
       inline: true,
