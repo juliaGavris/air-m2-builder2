@@ -68,7 +68,7 @@ export default function after({ dirname, currentName, units, optional }) {
       res.sendFile(dirname + req.originalUrl);
     });
     app.get(`/${units.dirS}/*`, (req, res) => {
-      const request = new Request({ req, dirname, units, currentName, optional });
+      const request = new Request({ req, dirname, units, currentName, optional, mode: "dev" });
 
       if (request.error) {
         console.log(request.error);
