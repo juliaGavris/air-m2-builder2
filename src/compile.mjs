@@ -16,7 +16,7 @@ export default class Compile {
     });
   }
 
-  config({ dirname, module, units, mode = "development" }) {
+  config({ dirname, module, units, mode }) {
     const pkg = JSON.parse(fs.readFileSync(dirname + `/node_modules/${module}/package.json`, "utf8"));
 
     const match = pkg.main.match(/\.\w+$/g);
