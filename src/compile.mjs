@@ -6,12 +6,8 @@ export default class Compile {
   constructor() {}
 
   go(opt) {
-    const { dirname, module, units, force = false } = opt;
-
-    if (force || !fs.existsSync(dirname + `/node_modules/${module}/${units.dir}/index.js`)) {
-      if (this.config(opt)) {
-        return this.run();
-      }
+    if (this.config(opt)) {
+      return this.run();
     }
 
     opt.resources = true;
@@ -20,7 +16,7 @@ export default class Compile {
     });
   }
 
-  config({ dirname, module, units, mode = "development" }) {
+  config({ dirname, module, units, mode }) {
     const pkg = JSON.parse(fs.readFileSync(dirname + `/node_modules/${module}/package.json`, "utf8"));
 
     const match = pkg.main.match(/\.\w+$/g);

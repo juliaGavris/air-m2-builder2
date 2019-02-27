@@ -1,23 +1,34 @@
 import utils from "./utils";
 import Install from "./install";
+import RequestOpt from "./request";
 
 const install = new Install();
 
 export default function({ dirname, currentName, units, optional }) {
   let p = 0;
 
-  function bundle() {
+  (function bundle() {
     for (let i = p; i < optional.length; i++) {
       const e = optional[i];
       const req = {
         originalUrl: `/m2units/${e.module}/index.js`,
         path: `/m2units/${e.module}/index.js`
       };
-      const opt = utils.getRequestOptions({ req, res: null, dirname, units, currentName, optional, mode: "prod" });
-      if (typeof opt === "object") {
-        opt.force = true;
-        opt.mode = "production";
+      const request = new RequestOpt({ req, dirname, units, currentName, optional, mode: "prod" });
+      const opt = "";
 
+      if (request.error) {
+        console.log(request.error);
+      } else if (request.mode === "currentModule") {
+        const from = `${dirname}/src/**/*`;
+        utils.copyFiles({
+          from,
+          to: `${dirname}/dist/${units.dirS}/${currentName}`,
+          up: utils.getUp(from),
+          module: currentName
+        });
+      } else {
+        const opt = request.options;
         install.go(opt).then(() => {
           if (opt.resources) {
             const from = `${dirname}/node_modules/${opt.module}/src/**/*`;
@@ -32,19 +43,8 @@ export default function({ dirname, currentName, units, optional }) {
             bundle();
           }
         });
-      } else {
-        if (opt === "currentModule") {
-          const from = `${dirname}/src/**/*`;
-          utils.copyFiles({
-            from,
-            to: `${dirname}/dist/${units.dirS}/${currentName}`,
-            up: utils.getUp(from),
-            module: currentName
-          });
-        }
       }
     }
     p = optional.length;
-  }
-  bundle();
+  })();
 }

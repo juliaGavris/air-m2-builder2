@@ -1,8 +1,8 @@
 import fs from "fs";
 import Install from "./install";
 import Cache from "./cache";
-import utils from "./utils";
-import Repl from "./repl.mjs";
+import Repl from "./repl";
+import Request from "./request";
 
 let install, installer, requester;
 
@@ -68,21 +68,25 @@ export default function after({ dirname, currentName, units, optional }) {
       res.sendFile(dirname + req.originalUrl);
     });
     app.get(`/${units.dirS}/*`, (req, res) => {
-      const opt = utils.getRequestOptions({ req, res, dirname, units, currentName, optional });
+      const request = new Request({ req, dirname, units, currentName, optional });
 
-      if (opt === null) {
+      if (request.error) {
+        console.log(request.error);
+        res.send(`ERROR '${request.options.module}': no install source error`);
+        return;
+      } else if (request.mode === "currentModule") {
+        res.sendFile(`${dirname}/src/${request.fileName}`);
         return;
       }
 
-      // console.log(`REQUEST: ${module} -- ${path.fullPath}`);
+      const opt = request.options;
+
       requester
         .get(opt)
         .then(() => {
-          // console.log(`GET: ${opt.resolvePath} -- OK`);
           return res.sendFile(opt.resolvePath);
         })
         .catch(error => {
-          // console.log(`GET: ${opt.resolvePath} -- FAIL`);
           installer.deleteInstance(opt.module);
           res.send(error);
         });
