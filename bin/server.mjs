@@ -2,6 +2,7 @@
 
 import fs from "fs";
 import path from "path";
+import Mocha from "mocha";
 import webpack from "webpack";
 import webpackConfig from "../webpack.config.js";
 import webpackCompileConfig from "../webpack-compiler.config.mjs";
@@ -9,6 +10,8 @@ import WebpackDevServer from "webpack-dev-server";
 import after from "../src/app.mjs";
 import prod from "../src/prod.mjs";
 import utils from "../src/utils.mjs";
+
+const mocha = new Mocha();
 
 const BUILDER_NAME = "air-m2-builder2";
 const PKG_REQUIRED_BY = "_requiredBy";
@@ -21,21 +24,35 @@ units.dirS = `${units.dir}s`;
 const gameConfigFilename = "air-m2.config.json";
 const gameConfigPath = `${dirname}/${gameConfigFilename}`;
 
-let buildMode;
-let toBuild = true;
+let buildMode = null;
+let toBuild = false;
+let toTest = false;
 if (process.argv[2] === undefined) {
   buildMode = "dev";
-  toBuild = false;
 } else {
   const buildArgs = process.argv[2].split(":");
-  if (buildArgs[0] !== "--build") {
-    throw `Error: Unknown argument '${buildArgs[0]}'. Only '--build:mode' accepted.`;
-  }
 
-  buildMode = buildArgs[1];
-  if (!["prod", "dev"].includes(buildMode)) {
-    throw `Error: Unknown startup parameter '${buildMode}'. Only 'prod' and 'dev' accepted.`;
+  if (buildArgs[0] === "--test") {
+    buildMode = "dev";
+    toTest = true;
+  } else if (buildArgs[0] === "--build") {
+    buildMode = buildArgs[1];
+    if (!["prod", "dev"].includes(buildMode)) {
+      throw `Error: Unknown startup parameter '${buildMode}'. Only 'prod' and 'dev' accepted.`;
+    }
+    toBuild = true;
+  } else {
+    throw `Error: Unknown argument '${buildArgs[0]}'. Accepted only: '--build:mode', '--test'`;
   }
+}
+
+if (toTest) {
+  const testDir = `${dirname}/node_modules/${BUILDER_NAME}/test`;
+  fs.readdirSync(testDir)
+    .filter(file => file.match(/\.js$/))
+    .forEach(file => {
+      mocha.addFile(path.join(testDir, file));
+    });
 }
 
 const mode = buildMode === "prod" ? "production" : "development";
@@ -106,6 +123,12 @@ webpack(webpackConfig(mode, dirname, masterPath)).run(function(err) {
   if (toBuild) {
     prod({ dirname, currentName, units, optional });
   } else {
+    if (toTest) {
+      const runner = mocha.timeout(30000).run();
+      runner.on("end", () => {
+        process.exit();
+      });
+    }
     const server = new WebpackDevServer(compiler, {
       headers: { "Access-Control-Allow-Origin": "*" },
       disableHostCheck: true,

@@ -6,24 +6,26 @@ import Request from "./request";
 
 let install, installer, requester;
 
-if (!process.argv[2] || process.argv[2].split(":")[1] === "dev") {
-  const repl = new Repl();
-  repl.start();
-  repl.subscribe("event--cache-cleared-all", () => {
-    installer.clear();
-    console.log("cache cleared completely");
-  });
-  repl.subscribe("event--cache-clear-by-key", key => {
-    if (installer.hasInstance(key)) {
-      installer.deleteInstance(key);
-      console.log(`cache cleared: ${key}`);
-    } else {
-      console.log(`unknown cache key: ${key}`);
-    }
-  });
-  repl.subscribe("event--throw-msg", msg => {
-    console.log(msg);
-  });
+if (process.argv[2] === undefined || process.argv[2] === "--test") {
+  if (process.argv[2] === undefined) {
+    const repl = new Repl();
+    repl.start();
+    repl.subscribe("event--cache-cleared-all", () => {
+      installer.clear();
+      console.log("cache cleared completely");
+    });
+    repl.subscribe("event--cache-clear-by-key", key => {
+      if (installer.hasInstance(key)) {
+        installer.deleteInstance(key);
+        console.log(`cache cleared: ${key}`);
+      } else {
+        console.log(`unknown cache key: ${key}`);
+      }
+    });
+    repl.subscribe("event--throw-msg", msg => {
+      console.log(msg);
+    });
+  }
 
   install = new Install();
   installer = new Cache({ createInstance: opt => install.go(opt) });
