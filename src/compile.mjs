@@ -3,62 +3,51 @@ import webpack from "webpack";
 import webpackCompileConfig from "../webpack-compiler.config.mjs";
 
 export default class Compile {
-  constructor() {}
+  constructor(opt) {
+    this.opt = opt;
+    const { dirname, module, units, mode } = this.opt;
 
-  go(opt) {
-    if (this.config(opt)) {
-      return this.run();
-    }
-
-    opt.resources = true;
-    return new Promise(resolve => {
-      resolve();
-    });
-  }
-
-  config({ dirname, module, units, mode }) {
-    const pkg = JSON.parse(fs.readFileSync(dirname + `/node_modules/${module}/package.json`, "utf8"));
-
-    const match = pkg.main.match(/\.\w+$/g);
-    const extension = match ? match[0] : null;
+    this.main = JSON.parse(fs.readFileSync(dirname + `/node_modules/${module}/package.json`, "utf8")).main;
     const path =
       mode === "development"
         ? `${dirname}/node_modules/${module}/${units.dir}`
         : `${dirname}/dist/${units.dirS}/${module}`;
-
-    if (extension === ".js") {
-      const compileOpt = {
-        mode,
-        path,
-        entry: `${dirname}/node_modules/${module}/${pkg.main}`,
-        filename: "index.js"
-      };
-      this.__config = webpackCompileConfig(compileOpt);
-      this.__module = module;
-
-      return true;
-    }
-
-    return false;
+    const compileOpt = {
+      mode,
+      path,
+      entry: `${dirname}/node_modules/${module}/${this.main}`,
+      filename: "index.js"
+    };
+    this.config = webpackCompileConfig(compileOpt);
   }
 
   run() {
-    return new Promise((res, rej) => {
-      console.log(`compile: ${this.__module} ...`);
-
-      const compiler = webpack(this.__config);
-
-      compiler.run((error, stats) => {
-        if (stats.hasErrors()) {
-          console.log(`ERROR: ${this.__module} compile error`);
-          console.log(stats.compilation.errors);
-          rej(`ERROR '${this.__module}': compile error`);
-          return;
-        }
-
-        console.log(`compile: ${this.__module} -- ok`);
-        res();
+    const match = this.main.match(/\.\w+$/g);
+    const extension = match ? match[0] : null;
+    if (extension !== ".js") {
+      this.opt.resources = true;
+      return new Promise(resolve => {
+        resolve();
       });
-    });
+    } else {
+      this.opt.resources = false;
+      return new Promise((res, rej) => {
+        console.log(`compile: ${this.opt.module} ...`);
+
+        const compiler = webpack(this.config);
+
+        compiler.run((error, stats) => {
+          if (stats.hasErrors()) {
+            console.log(`ERROR: ${this.opt.module} compile error`);
+            console.log(stats.compilation.errors);
+            rej(`ERROR '${this.opt.module}': compile error`);
+            return;
+          }
+
+          console.log(`compile: ${this.opt.module} -- ok`);
+          res();
+        });
+      });
+    }
   }
 }

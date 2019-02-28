@@ -1,11 +1,12 @@
 export default class Request {
-  constructor({ req, dirname, units, currentName, optional, mode = "dev" }) {
+  constructor({ req, dirname, units, currentName, optional, mode }) {
     this.mode = "request";
 
     const path = {
       fullPath: dirname + req.originalUrl,
       filePath: null,
-      resPath: null
+      resPath: null,
+      resolvePath: null
     };
 
     let match = req.path.match(/\.\w+$/g);
@@ -17,10 +18,13 @@ export default class Request {
     path.filePath = `${dirname}/node_modules/${module}/${units.dir}/${this.fileName}`;
     path.resPath = `${dirname}/node_modules/${module}/src/${this.fileName}`;
 
+    let resources;
     if (extension === ".js") {
       path.resolvePath = path.filePath;
+      resources = false;
     } else {
       path.resolvePath = path.resPath;
+      resources = true;
     }
 
     if (module === currentName) {
@@ -37,6 +41,7 @@ export default class Request {
       mode: mode === "prod" ? "production" : "development",
       source: source.source,
       resolvePath: path.resolvePath,
+      resources,
       module,
       dirname,
       units,

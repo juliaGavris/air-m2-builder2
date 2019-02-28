@@ -20,7 +20,7 @@ export default class Install {
         }
       }
 
-      return new Compile().go(opt);
+      return new Compile(opt).run();
     });
   }
 
@@ -38,7 +38,6 @@ export default class Install {
     this.__queue.push(opt);
 
     if (!this.__pending) {
-      // console.log("--i-- INSTALL IN 1 SEC");
       this.__pending = true;
       this.promise = new Promise((res, rej) => {
         setTimeout(() => {
@@ -51,8 +50,6 @@ export default class Install {
             });
         }, 1000);
       });
-    } else {
-      // console.log("--i-- PENDING INSTALL REQUEST");
     }
 
     return this.promise;

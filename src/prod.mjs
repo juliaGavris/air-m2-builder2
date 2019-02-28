@@ -15,7 +15,6 @@ export default function({ dirname, currentName, units, optional }) {
         path: `/m2units/${e.module}/index.js`
       };
       const request = new RequestOpt({ req, dirname, units, currentName, optional, mode: "prod" });
-      const opt = "";
 
       if (request.error) {
         console.log(request.error);
