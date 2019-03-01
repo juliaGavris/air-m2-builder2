@@ -9,18 +9,25 @@ import prod from "../src/prod.mjs";
 export default class DevServer {
   constructor(options) {
     this.opt = options;
+  }
+
+  precompile() {
     const { mode, dirname, masterPath, currentName } = this.opt;
 
-    webpack(webpackConfig(mode, dirname, masterPath)).run(function(err) {
-      if (err) throw err;
+    return new Promise(res => {
+      webpack(webpackConfig(mode, dirname, masterPath)).run(err => {
+        if (err) throw err;
 
-      const compileOpt = {
-        mode,
-        entry: `${dirname}/src/index.js`,
-        path: path.resolve(dirname, "./dist/"),
-        filename: `${currentName}/index.js`
-      };
-      this.compiler = webpack(webpackCompileConfig(compileOpt));
+        const compileOpt = {
+          mode,
+          entry: `${dirname}/src/index.js`,
+          path: path.resolve(dirname, "./dist/"),
+          filename: `${currentName}/index.js`
+        };
+        this.compiler = webpack(webpackCompileConfig(compileOpt));
+
+        res();
+      });
     });
   }
 

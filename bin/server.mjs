@@ -82,9 +82,9 @@ if (master !== currentName) {
   }
 }
 
-const masterPath = `${dirname}/${master === currentName ? "" : `node_modules/${master}/`}src/m2.js`;
-if (!fs.existsSync(masterPath)) {
-  throw `Error: Cannot find 'm2.js' on source '${masterPath}'`;
+const masterPath = [`${dirname}/${master === currentName ? "" : `node_modules/${master}`}`, "/src/m2.js"];
+if (!fs.existsSync(masterPath.join(""))) {
+  throw `Error: Cannot find 'm2.js' on source '${masterPath.path + masterPath.file}'`;
 }
 
 const devServerOpt = {
@@ -98,8 +98,10 @@ const devServerOpt = {
   optional
 };
 const devserver = new DevServer(devServerOpt);
-if (toBuild) {
-  devserver.build();
-} else {
-  devserver.run();
-}
+devserver.precompile().then(() => {
+  if (toBuild) {
+    devserver.build();
+  } else {
+    devserver.run();
+  }
+});
