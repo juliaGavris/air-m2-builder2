@@ -4,6 +4,19 @@
     <meta charset="UTF-8" />
     <title>Title</title>
     <script src="m2.js"></script>
+    <script src="/m2units/test-module--game-unit/index.js"></script>
   </head>
   <body></body>
 </html>
+
+<script>
+  setTimeout(() => {
+    const arr = ["1", "2", "10", "025", "25", "050", "50", "100", "500"];
+    arr.forEach(e => {
+      const img = document.createElement("img");
+      img.src = "/m2units/test-module--game-resources/res/images/bt-chip-" + e + "-small.svg";
+      img.alt = "bt-chip-" + e + "-small.svg";
+      document.body.append(img);
+    });
+  }, 2000);
+</script>
