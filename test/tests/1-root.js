@@ -15,22 +15,22 @@ describe("Root", () => {
         done();
       });
   });
-  // it("/m2.js", done => {
-  //   chai
-  //     .request(`http://localhost:${port}`)
-  //     .get("/m2.js")
-  //     .end((err, res) => {
-  //       res.should.have.status(200);
-  //       done();
-  //     });
-  // });
-  // it("/index.html", done => {
-  //   chai
-  //     .request(`http://localhost:${port}`)
-  //     .get("/index.html")
-  //     .end((err, res) => {
-  //       res.should.have.status(200);
-  //       done();
-  //     });
-  // });
+  it("/m2.js", done => {
+    chai
+      .request(`http://localhost:${port}`)
+      .get("/m2.js")
+      .end((err, res) => {
+        res.should.have.status(200);
+        done();
+      });
+  });
+  it("/index.html", done => {
+    chai
+      .request(`http://localhost:${port}`)
+      .get("/index.html")
+      .end((err, res) => {
+        res.should.have.status(200);
+        done();
+      });
+  });
 });

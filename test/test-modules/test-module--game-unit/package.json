@@ -8,5 +8,8 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "m2units": {
+    "test-module--game-resources": "test/test-modules/test-module--game-resources"
+  }
 }

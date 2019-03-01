@@ -3,7 +3,8 @@ import webpack from "webpack";
 import webpackConfig from "../webpack.config.js";
 import webpackCompileConfig from "../webpack-compiler.config.mjs";
 import WebpackDevServer from "webpack-dev-server";
-import after from "../src/app.mjs";
+import App from "../src/app.mjs";
+import after from "../src/after.mjs";
 import prod from "../src/prod.mjs";
 
 export default class DevServer {
@@ -37,8 +38,10 @@ export default class DevServer {
     prod({ dirname, currentName, units, optional });
   }
 
-  run() {
+  run({ test = false }) {
     const { dirname, master, units, currentName, optional, port } = this.opt;
+
+    const app = new App({ test });
 
     const server = new WebpackDevServer(this.compiler, {
       headers: { "Access-Control-Allow-Origin": "*" },
@@ -49,7 +52,7 @@ export default class DevServer {
       hot: true,
       inline: true,
       watchContentBase: true,
-      after: after({ dirname, currentName, units, optional })
+      after: after({ dirname, currentName, units, optional, app })
     });
 
     server.listen(port, "0.0.0.0", err => {

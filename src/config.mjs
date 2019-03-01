@@ -1,6 +1,8 @@
 import fs from "fs";
 import path from "path";
-import utils from "../src/utils.mjs";
+import Utils from "../src/utils.mjs";
+
+const utils = new Utils();
 
 const PORT = 9000;
 const BUILDER_NAME = "air-m2-builder2";
@@ -84,7 +86,7 @@ export default class ServerConfig {
 
     const masterPath = [`${dirname}/${master === currentName ? "" : `node_modules/${master}`}`, "/src/m2.js"];
     if (!fs.existsSync(masterPath.join(""))) {
-      throw `Error: Cannot find 'm2.js' on source '${masterPath.path + masterPath.file}'`;
+      throw `Error: Cannot find 'm2.js' on source '${masterPath.join("")}'`;
     }
 
     this.config = {
