@@ -2,16 +2,8 @@
 
 import fs from "fs";
 import path from "path";
-import Mocha from "mocha";
-import webpack from "webpack";
-import webpackConfig from "../webpack.config.js";
-import webpackCompileConfig from "../webpack-compiler.config.mjs";
-import WebpackDevServer from "webpack-dev-server";
-import after from "../src/app.mjs";
-import prod from "../src/prod.mjs";
 import utils from "../src/utils.mjs";
-
-const mocha = new Mocha();
+import DevServer from "../src/devserver.mjs";
 
 const BUILDER_NAME = "air-m2-builder2";
 const PKG_REQUIRED_BY = "_requiredBy";
@@ -21,40 +13,26 @@ const currentName = dirname.match(/[-\w]+$/)[0];
 const units = { dir: "m2unit", requires: "m2units" };
 units.dirS = `${units.dir}s`;
 
-const gameConfigFilename = "air-m2.config.json";
-const gameConfigPath = `${dirname}/${gameConfigFilename}`;
-
 let buildMode = null;
 let toBuild = false;
-let toTest = false;
 if (process.argv[2] === undefined) {
   buildMode = "dev";
 } else {
   const buildArgs = process.argv[2].split(":");
 
-  if (buildArgs[0] === "--test") {
-    buildMode = "dev";
-    toTest = true;
-  } else if (buildArgs[0] === "--build") {
+  if (buildArgs[0] === "--build") {
     buildMode = buildArgs[1];
     if (!["prod", "dev"].includes(buildMode)) {
       throw `Error: Unknown startup parameter '${buildMode}'. Only 'prod' and 'dev' accepted.`;
     }
     toBuild = true;
   } else {
-    throw `Error: Unknown argument '${buildArgs[0]}'. Accepted only: '--build:mode', '--test'`;
+    throw `Error: Unknown argument '${buildArgs[0]}'. Accepted only: '--build:mode'`;
   }
 }
 
-if (toTest) {
-  const testDir = `${dirname}/node_modules/${BUILDER_NAME}/test`;
-  fs.readdirSync(testDir)
-    .filter(file => file.match(/\.js$/))
-    .forEach(file => {
-      mocha.addFile(path.join(testDir, file));
-    });
-}
-
+const gameConfigFilename = "air-m2.config.json";
+const gameConfigPath = `${dirname}/${gameConfigFilename}`;
 const mode = buildMode === "prod" ? "production" : "development";
 let port = 9000;
 let master = null;
@@ -109,41 +87,19 @@ if (!fs.existsSync(masterPath)) {
   throw `Error: Cannot find 'm2.js' on source '${masterPath}'`;
 }
 
-webpack(webpackConfig(mode, dirname, masterPath)).run(function(err) {
-  if (err) throw err;
-
-  const compileOpt = {
-    mode,
-    entry: `${dirname}/src/index.js`,
-    path: path.resolve(dirname, "./dist/"),
-    filename: `${currentName}/index.js`
-  };
-  const compiler = webpack(webpackCompileConfig(compileOpt));
-
-  if (toBuild) {
-    prod({ dirname, currentName, units, optional });
-  } else {
-    if (toTest) {
-      const runner = mocha.timeout(30000).run();
-      runner.on("end", () => {
-        process.exit();
-      });
-    }
-    const server = new WebpackDevServer(compiler, {
-      headers: { "Access-Control-Allow-Origin": "*" },
-      disableHostCheck: true,
-      stats: { colors: true },
-      contentBase: `${dirname}/node_modules/${BUILDER_NAME}/dist`,
-      publicPath: `/${units.dirS}/`,
-      hot: true,
-      inline: true,
-      watchContentBase: true,
-      after: after({ dirname, currentName, units, optional })
-    });
-
-    server.listen(port, "0.0.0.0", err => {
-      if (err) throw err;
-      console.log(`Starting root server on 0.0.0.0:${port}`);
-    });
-  }
-});
+const devServerOpt = {
+  port,
+  mode,
+  dirname,
+  currentName,
+  master,
+  masterPath,
+  units,
+  optional
+};
+const devserver = new DevServer(devServerOpt);
+if (toBuild) {
+  devserver.build();
+} else {
+  devserver.run();
+}

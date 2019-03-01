@@ -1,0 +1,6 @@
+[
+  "formatters",
+  ["currency", { "style": "currency", "splitter": ".", "currencyDisplay": "symbol" }],
+  ["number", { "style": "decimal", "splitter": "." }],
+  ["percent", { "style": "percent" }]
+]

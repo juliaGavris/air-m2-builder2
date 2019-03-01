@@ -1,0 +1,8 @@
+[
+  "main",
+  {
+    "frames": [
+        ["fade-out", { "duration": 0.1 }, [100, {"counter": 100}]]
+    ]
+  }
+]
