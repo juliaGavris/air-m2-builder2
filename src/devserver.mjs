@@ -38,10 +38,10 @@ export default class DevServer {
     prod({ dirname, currentName, units, optional });
   }
 
-  run({ test = false }) {
+  run(opt = { test: false }) {
     const { dirname, master, units, currentName, optional, port } = this.opt;
 
-    const app = new App({ test });
+    const app = new App({ test: opt.test });
 
     const server = new WebpackDevServer(this.compiler, {
       headers: { "Access-Control-Allow-Origin": "*" },
