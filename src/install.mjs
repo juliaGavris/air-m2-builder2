@@ -81,7 +81,7 @@ export default class Install {
         console.log(`install: ${p} ...`);
       });
 
-      utils.execute({ pkg, test: this.__test }).then(error => {
+      utils.execute({ pkg, test: this.__test, dirname: processing[0].dirname }).then(error => {
         if (error) {
           console.log(error);
           rej(`ERROR: install error\n${pkgList.join("\n")}`);

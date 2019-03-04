@@ -8,11 +8,11 @@ import Utils from "../src/utils.mjs";
 const utils = new Utils();
 const mocha = new Mocha();
 const dirname = path.resolve(path.dirname(""));
+const fakeDirname = `${dirname}/node_modules/testix-game`;
 
 const copyPaths = [
-  { from: `${dirname}/test/test-modules/testix-builder/**/*`, to: `${dirname}/node_modules/testix-builder` },
-  { from: `${dirname}/test/test-modules/index.js`, to: `${dirname}/src/` },
-  { from: `${dirname}/test/test-modules/air-m2.config.json`, to: dirname }
+  { from: `${dirname}/test/test-modules/testix-game/**/*`, to: fakeDirname },
+  { from: `${dirname}/test/test-modules/testix-builder/**/*`, to: `${fakeDirname}/node_modules/testix-builder` }
 ];
 Promise.all(
   copyPaths.map(path => {
@@ -20,9 +20,9 @@ Promise.all(
     return utils.copyFiles({ from, to, up: utils.getUp(from) });
   })
 ).then(() => {
-  const config = new ServerConfig().config;
+  const config = new ServerConfig({ customDir: fakeDirname }).config;
 
-  const testDir = `${config.dirname}/test/tests`;
+  const testDir = `${dirname}/test/tests`;
   fs.readdirSync(testDir)
     .filter(file => file.match(/\.js$/))
     .forEach(file => {

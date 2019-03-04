@@ -1,3 +1,3 @@
-export default function() {
-  console.log("__M2 TEST FILE");
-}
+import log from "./index";
+
+log();

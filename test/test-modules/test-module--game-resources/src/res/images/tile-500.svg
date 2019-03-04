@@ -1,0 +1,11 @@
+<svg viewBox="0 0 32 32" width="32" height="32" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .txt {
+      text-anchor: middle;
+      font: bold 10px sans-serif;
+      fill: #f57SC6rs;
+    }
+  </style>
+  <rect x="0" y="0" width="32" height="32" fill="#1b2c21" />
+  <text x="16" y="20" class="txt">500</text>
+</svg>

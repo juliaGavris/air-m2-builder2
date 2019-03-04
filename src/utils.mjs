@@ -48,12 +48,12 @@ export default class Utils {
       .match(/\//g).length;
   }
 
-  execute({ pkg, test }) {
+  execute({ pkg, test, dirname }) {
     return new Promise(res => {
       if (test) {
-        const dirname = path.resolve(path.dirname(""));
+        const testDir = path.resolve(path.dirname(""));
         const unit = pkg.match(/[-\w]+$/)[0];
-        const from = `${dirname}/${pkg}/**/*`;
+        const from = `${testDir}/${pkg}/**/*`;
         this.copyFiles({ from, to: `${dirname}/node_modules/${unit}`, up: this.getUp(from) }).then(error => {
           res(error);
         });

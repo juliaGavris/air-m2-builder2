@@ -1,6 +1,10 @@
-[
-  "formatters",
-  ["currency", { "style": "currency", "splitter": ".", "currencyDisplay": "symbol" }],
-  ["number", { "style": "decimal", "splitter": "." }],
-  ["percent", { "style": "percent" }]
-]
+{
+  "test-key": "testix",
+  "father": "Vader",
+  "droid-we-are-looking-for": {
+    "r2d2": true,
+    "c3po": true,
+    "hk-47": false,
+    "k-2so": false
+  }
+}

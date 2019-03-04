@@ -1,4 +1,3 @@
-export default function() {
-  let i = 5;
+export default function({ i = 5 }) {
   return ++i + ++i;
 }

@@ -9,8 +9,8 @@ const BUILDER_NAME = "air-m2-builder2";
 const PKG_REQUIRED_BY = "_requiredBy";
 
 export default class ServerConfig {
-  constructor() {
-    const dirname = path.resolve(path.dirname(""));
+  constructor({ customDir = false }) {
+    const dirname = customDir ? customDir : path.resolve(path.dirname(""));
     const currentName = dirname.match(/[-\w]+$/)[0];
     const units = { dir: "m2unit", requires: "m2units" };
     units.dirS = `${units.dir}s`;
