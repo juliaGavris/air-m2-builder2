@@ -7,7 +7,12 @@ export default class Compile {
     this.opt = opt;
     const { dirname, module, units, mode } = this.opt;
 
-    this.main = JSON.parse(fs.readFileSync(dirname + `/node_modules/${module}/package.json`, "utf8")).main;
+    const pkgPath = `${dirname}/node_modules/${module}/package.json`;
+    const pkg = fs.readFileSync(pkgPath, "utf8");
+    if (!pkg) {
+      throw `ERROR: file not found '${pkgPath}'`;
+    }
+    this.main = JSON.parse(pkg).main;
     const path =
       mode === "development"
         ? `${dirname}/node_modules/${module}/${units.dir}`

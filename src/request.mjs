@@ -39,7 +39,7 @@ export default class Request {
     this.options = {
       force: mode === "prod" ? true : false,
       mode: mode === "prod" ? "production" : "development",
-      source: source.source,
+      source: this.error ? null : source.source,
       resolvePath: path.resolvePath,
       resources,
       module,

@@ -9,12 +9,17 @@ const utils = new Utils();
 const mocha = new Mocha();
 const dirname = path.resolve(path.dirname(""));
 
-const from1 = `${dirname}/test/test-modules/testix-builder/**/*`;
-const from2 = `${dirname}/test/test-modules/index.js`;
-Promise.all([
-  utils.copyFiles({ from: from1, to: `${dirname}/node_modules/testix-builder`, up: utils.getUp(from1) }),
-  utils.copyFiles({ from: from2, to: `${dirname}/src/`, up: utils.getUp(from2) })
-]).then(() => {
+const copies = [];
+const copyPaths = [
+  { from: `${dirname}/test/test-modules/testix-builder/**/*`, to: `${dirname}/node_modules/testix-builder` },
+  { from: `${dirname}/test/test-modules/index.js`, to: `${dirname}/src/` },
+  { from: `${dirname}/test/test-modules/air-m2.config.json`, to: dirname }
+];
+copyPaths.forEach(path => {
+  const { from, to } = path;
+  copies.push(utils.copyFiles({ from, to, up: utils.getUp(from) }));
+});
+Promise.all(copies).then(() => {
   const config = new ServerConfig().config;
 
   const testDir = `${config.dirname}/test/tests`;
