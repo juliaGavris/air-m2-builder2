@@ -2,6 +2,7 @@ var chai = require("chai");
 var chaiHttp = require("chai-http");
 
 const port = 9000;
+const should = chai.should();
 chai.use(chaiHttp);
 
 describe("Resources", () => {
@@ -24,6 +25,7 @@ describe("Resources", () => {
         .end((err, res) => {
           res.should.have.status(200);
           res.text.length.should.be.equal(138);
+          res.text.indexOf("<!DOCTYPE html>").should.be.equal(0);
           res.text.indexOf("<title>Title</title>").should.be.greaterThan(-1);
           done();
         });
@@ -39,6 +41,7 @@ describe("Resources", () => {
             res.should.have.status(200);
             res.text.length.should.be.equal(52);
             res.text.indexOf("background-color: red").should.be.greaterThan(-1);
+            res.text.indexOf("color: blue").should.be.greaterThan(-1);
             done();
           });
       });
@@ -50,11 +53,9 @@ describe("Resources", () => {
           .get("/m2units/test-module--game-resources/res/images/tile-1.svg")
           .end((err, res) => {
             res.should.have.status(200);
-            res.body.asciiSlice().length.should.be.equal(316);
-            res.body
-              .asciiSlice()
-              .indexOf("1</text>")
-              .should.be.greaterThan(-1);
+            const text = res.body.asciiSlice();
+            text.length.should.be.equal(316);
+            text.indexOf("1</text>").should.be.greaterThan(-1);
             done();
           });
       });
@@ -64,6 +65,9 @@ describe("Resources", () => {
           .get("/m2units/test-module--game-resources/res/images/tile-2.svg")
           .end((err, res) => {
             res.should.have.status(200);
+            const text = res.body.asciiSlice();
+            text.length.should.be.equal(316);
+            text.indexOf("2</text>").should.be.greaterThan(-1);
             done();
           });
       });
@@ -73,6 +77,9 @@ describe("Resources", () => {
           .get("/m2units/test-module--game-resources/res/images/tile-10.svg")
           .end((err, res) => {
             res.should.have.status(200);
+            const text = res.body.asciiSlice();
+            text.length.should.be.equal(318);
+            text.indexOf("10</text>").should.be.greaterThan(-1);
             done();
           });
       });
@@ -82,6 +89,9 @@ describe("Resources", () => {
           .get("/m2units/test-module--game-resources/res/images/tile-025.svg")
           .end((err, res) => {
             res.should.have.status(200);
+            const text = res.body.asciiSlice();
+            text.length.should.be.equal(319);
+            text.indexOf("0.25</text>").should.be.greaterThan(-1);
             done();
           });
       });
@@ -91,6 +101,9 @@ describe("Resources", () => {
           .get("/m2units/test-module--game-resources/res/images/tile-25.svg")
           .end((err, res) => {
             res.should.have.status(200);
+            const text = res.body.asciiSlice();
+            text.length.should.be.equal(317);
+            text.indexOf("25</text>").should.be.greaterThan(-1);
             done();
           });
       });
@@ -100,6 +113,9 @@ describe("Resources", () => {
           .get("/m2units/test-module--game-resources/res/images/tile-050.svg")
           .end((err, res) => {
             res.should.have.status(200);
+            const text = res.body.asciiSlice();
+            text.length.should.be.equal(319);
+            text.indexOf("0.50</text>").should.be.greaterThan(-1);
             done();
           });
       });
@@ -109,6 +125,9 @@ describe("Resources", () => {
           .get("/m2units/test-module--game-resources/res/images/tile-50.svg")
           .end((err, res) => {
             res.should.have.status(200);
+            const text = res.body.asciiSlice();
+            text.length.should.be.equal(317);
+            text.indexOf("50</text>").should.be.greaterThan(-1);
             done();
           });
       });
@@ -118,6 +137,9 @@ describe("Resources", () => {
           .get("/m2units/test-module--game-resources/res/images/tile-100.svg")
           .end((err, res) => {
             res.should.have.status(200);
+            const text = res.body.asciiSlice();
+            text.length.should.be.equal(318);
+            text.indexOf("100</text>").should.be.greaterThan(-1);
             done();
           });
       });
@@ -127,6 +149,9 @@ describe("Resources", () => {
           .get("/m2units/test-module--game-resources/res/images/tile-500.svg")
           .end((err, res) => {
             res.should.have.status(200);
+            const text = res.body.asciiSlice();
+            text.length.should.be.equal(320);
+            text.indexOf("500</text>").should.be.greaterThan(-1);
             done();
           });
       });
@@ -138,7 +163,6 @@ describe("Resources", () => {
         .end((err, res) => {
           res.should.have.status(200);
           res.body["test-key"].should.be.equal("testix");
-          res.body.father.should.be.equal("Vader");
           res.body["droid-we-are-looking-for"].c3po.should.be.equal(true);
           res.body["droid-we-are-looking-for"]["k-2so"].should.be.equal(false);
           done();
