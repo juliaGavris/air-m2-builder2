@@ -1,6 +1,6 @@
 {
   "name": "air-m2-builder2",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -14,7 +14,7 @@
     "url": "git@github.com:artifishional/air-m2-builder2.git"
   },
   "keywords": [],
-  "author": "",
+  "author": "ai.2019",
   "license": "ISC",
   "dependencies": {
     "air-html": "^0.1.10",
