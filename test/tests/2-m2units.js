@@ -1,3 +1,5 @@
+/*eslint no-unused-vars: 0*/
+
 var chai = require("chai");
 var chaiHttp = require("chai-http");
 
@@ -22,7 +24,6 @@ describe("m2units", () => {
       .get("/m2units/test-module--game-resources/index.html")
       .end((err, res) => {
         res.should.have.status(200);
-        res.text.length.should.be.equal(138);
         res.text.indexOf("<!DOCTYPE html>").should.be.equal(0);
         res.text.indexOf("<title>Title</title>").should.be.greaterThan(-1);
         done();

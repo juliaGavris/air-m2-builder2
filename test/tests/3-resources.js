@@ -1,3 +1,5 @@
+/*eslint no-unused-vars: 0*/
+
 var chai = require("chai");
 var chaiHttp = require("chai-http");
 
@@ -24,7 +26,6 @@ describe("Resources", () => {
         .get("/m2units/test-module--game-resources/loader/index.html")
         .end((err, res) => {
           res.should.have.status(200);
-          res.text.length.should.be.equal(138);
           res.text.indexOf("<!DOCTYPE html>").should.be.equal(0);
           res.text.indexOf("<title>Title</title>").should.be.greaterThan(-1);
           done();
@@ -39,7 +40,6 @@ describe("Resources", () => {
           .get("/m2units/test-module--game-resources/res/css/styles.css")
           .end((err, res) => {
             res.should.have.status(200);
-            res.text.length.should.be.equal(52);
             res.text.indexOf("background-color: red").should.be.greaterThan(-1);
             res.text.indexOf("color: blue").should.be.greaterThan(-1);
             done();
@@ -53,9 +53,10 @@ describe("Resources", () => {
           .get("/m2units/test-module--game-resources/res/images/tile-1.svg")
           .end((err, res) => {
             res.should.have.status(200);
-            const text = res.body.asciiSlice();
-            text.length.should.be.equal(316);
-            text.indexOf("1</text>").should.be.greaterThan(-1);
+            res.body
+              .asciiSlice()
+              .indexOf("1</text>")
+              .should.be.greaterThan(-1);
             done();
           });
       });
@@ -65,9 +66,10 @@ describe("Resources", () => {
           .get("/m2units/test-module--game-resources/res/images/tile-2.svg")
           .end((err, res) => {
             res.should.have.status(200);
-            const text = res.body.asciiSlice();
-            text.length.should.be.equal(316);
-            text.indexOf("2</text>").should.be.greaterThan(-1);
+            res.body
+              .asciiSlice()
+              .indexOf("2</text>")
+              .should.be.greaterThan(-1);
             done();
           });
       });
@@ -77,9 +79,10 @@ describe("Resources", () => {
           .get("/m2units/test-module--game-resources/res/images/tile-10.svg")
           .end((err, res) => {
             res.should.have.status(200);
-            const text = res.body.asciiSlice();
-            text.length.should.be.equal(318);
-            text.indexOf("10</text>").should.be.greaterThan(-1);
+            res.body
+              .asciiSlice()
+              .indexOf("10</text>")
+              .should.be.greaterThan(-1);
             done();
           });
       });
@@ -89,9 +92,10 @@ describe("Resources", () => {
           .get("/m2units/test-module--game-resources/res/images/tile-025.svg")
           .end((err, res) => {
             res.should.have.status(200);
-            const text = res.body.asciiSlice();
-            text.length.should.be.equal(319);
-            text.indexOf("0.25</text>").should.be.greaterThan(-1);
+            res.body
+              .asciiSlice()
+              .indexOf("0.25</text>")
+              .should.be.greaterThan(-1);
             done();
           });
       });
@@ -101,9 +105,10 @@ describe("Resources", () => {
           .get("/m2units/test-module--game-resources/res/images/tile-25.svg")
           .end((err, res) => {
             res.should.have.status(200);
-            const text = res.body.asciiSlice();
-            text.length.should.be.equal(317);
-            text.indexOf("25</text>").should.be.greaterThan(-1);
+            res.body
+              .asciiSlice()
+              .indexOf("25</text>")
+              .should.be.greaterThan(-1);
             done();
           });
       });
@@ -113,9 +118,10 @@ describe("Resources", () => {
           .get("/m2units/test-module--game-resources/res/images/tile-050.svg")
           .end((err, res) => {
             res.should.have.status(200);
-            const text = res.body.asciiSlice();
-            text.length.should.be.equal(319);
-            text.indexOf("0.50</text>").should.be.greaterThan(-1);
+            res.body
+              .asciiSlice()
+              .indexOf("0.50</text>")
+              .should.be.greaterThan(-1);
             done();
           });
       });
@@ -125,9 +131,10 @@ describe("Resources", () => {
           .get("/m2units/test-module--game-resources/res/images/tile-50.svg")
           .end((err, res) => {
             res.should.have.status(200);
-            const text = res.body.asciiSlice();
-            text.length.should.be.equal(317);
-            text.indexOf("50</text>").should.be.greaterThan(-1);
+            res.body
+              .asciiSlice()
+              .indexOf("50</text>")
+              .should.be.greaterThan(-1);
             done();
           });
       });
@@ -137,9 +144,10 @@ describe("Resources", () => {
           .get("/m2units/test-module--game-resources/res/images/tile-100.svg")
           .end((err, res) => {
             res.should.have.status(200);
-            const text = res.body.asciiSlice();
-            text.length.should.be.equal(318);
-            text.indexOf("100</text>").should.be.greaterThan(-1);
+            res.body
+              .asciiSlice()
+              .indexOf("100</text>")
+              .should.be.greaterThan(-1);
             done();
           });
       });
@@ -149,9 +157,10 @@ describe("Resources", () => {
           .get("/m2units/test-module--game-resources/res/images/tile-500.svg")
           .end((err, res) => {
             res.should.have.status(200);
-            const text = res.body.asciiSlice();
-            text.length.should.be.equal(320);
-            text.indexOf("500</text>").should.be.greaterThan(-1);
+            res.body
+              .asciiSlice()
+              .indexOf("500</text>")
+              .should.be.greaterThan(-1);
             done();
           });
       });
