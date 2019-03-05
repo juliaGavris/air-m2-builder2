@@ -1,15 +1,17 @@
 import fs from "fs";
-import { exec } from "child_process";
 import Compile from "./compile";
-import utils from "./utils";
+import Utils from "./utils";
+
+const utils = new Utils();
 
 export default class Install {
-  constructor() {
+  constructor({ test }) {
     this.__queue = [];
     this.__pending = false;
+    this.__test = test;
   }
 
-  go(opt = {}) {
+  go(opt) {
     return this.install(opt).then(() => {
       const { dirname, module, units, optional } = opt;
       const pkgPath = dirname + `/node_modules/${module}/package.json`;
@@ -71,22 +73,15 @@ export default class Install {
       const processing = this.__queue.splice(0, this.__queue.length);
       const pkg = processing
         .reduce((prev, cur) => {
-          if (cur.source.match(/^git\+ssh/g)) {
-            return prev + cur.source + " ";
-          } else if (cur.source.match(/^(\^|~)?\d+\.\d+\.\d+$/g)) {
-            return prev + `${cur.module}@${cur.source} `;
-          }
-
-          return prev + cur.module + " ";
+          return prev + cur.source + " ";
         }, "")
         .trim();
-      const execString = `npm i --no-save --no-optional ${pkg}`;
       const pkgList = pkg.replace(/ /g, "\n").split("\n");
       pkgList.forEach(p => {
         console.log(`install: ${p} ...`);
       });
 
-      exec(execString, error => {
+      utils.execute({ pkg, test: this.__test, dirname: processing[0].dirname }).then(error => {
         if (error) {
           console.log(error);
           rej(`ERROR: install error\n${pkgList.join("\n")}`);

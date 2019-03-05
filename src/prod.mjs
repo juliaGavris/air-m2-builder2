@@ -1,8 +1,9 @@
-import utils from "./utils";
+import Utils from "./utils";
 import Install from "./install";
 import RequestOpt from "./request";
 
-const install = new Install();
+const utils = new Utils();
+const install = new Install({ test: false });
 
 export default function({ dirname, currentName, units, optional }) {
   let p = 0;
@@ -20,23 +21,30 @@ export default function({ dirname, currentName, units, optional }) {
         console.log(request.error);
       } else if (request.mode === "currentModule") {
         const from = `${dirname}/src/**/*`;
-        utils.copyFiles({
-          from,
-          to: `${dirname}/dist/${units.dirS}/${currentName}`,
-          up: utils.getUp(from),
-          module: currentName
-        });
+        utils
+          .copyFiles({
+            from,
+            to: `${dirname}/dist/${units.dirS}/${currentName}`,
+            up: utils.getUp(from),
+            module: currentName
+          })
+          .then(() => {
+            console.log(`copy: ${currentName} -- ok`);
+          });
       } else {
         const opt = request.options;
         install.go(opt).then(() => {
           if (opt.resources) {
             const from = `${dirname}/node_modules/${opt.module}/src/**/*`;
-            utils.copyFiles({
-              from,
-              to: `${dirname}/dist/${units.dirS}/${opt.module}`,
-              up: utils.getUp(from),
-              module: opt.module
-            });
+            utils
+              .copyFiles({
+                from,
+                to: `${dirname}/dist/${units.dirS}/${opt.module}`,
+                up: utils.getUp(from)
+              })
+              .then(() => {
+                console.log(`copy: ${opt.module} -- ok`);
+              });
           }
           if (p < optional.length) {
             bundle();

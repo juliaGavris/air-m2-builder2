@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Title</title>
+    <script src="m2.js"></script>
+    <script src="/m2units/test-module--game-unit/index.js"></script>
+  </head>
+  <body></body>
+</html>
+
+<script>
+  setTimeout(() => {
+    const arr = ["1", "2", "10", "025", "25", "050", "50", "100", "500"];
+    arr.forEach(e => {
+      const img = document.createElement("img");
+      img.src = "/m2units/test-module--game-resources/res/images/tile-" + e + ".svg";
+      img.alt = "tile-" + e + ".svg";
+      document.body.append(img);
+    });
+    const iframe1 = document.createElement("iframe");
+    const iframe2 = document.createElement("iframe");
+    iframe1.src = "/m2units/test-module--game-resources/loader/description.json";
+    iframe1.style.width = "1000px";
+    iframe1.style.height = "250px";
+    iframe2.src = "/m2units/test-module--game-resources/res/somewhat.json";
+    iframe2.style.width = "1000px";
+    iframe2.style.height = "250px";
+    document.body.append(iframe1);
+    document.body.append(iframe2);
+  }, 2000);
+</script>

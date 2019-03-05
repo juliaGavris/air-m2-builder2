@@ -4,8 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "patch": "npm version patch && npm publish && git push origin",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node --experimental-modules ./test/test.mjs"
   },
   "bin": {
     "air-m2-builder2": "./bin/server.mjs"
@@ -25,6 +24,9 @@
     "webpack": "^4.29.5",
     "webpack-cli": "^3.2.3",
     "webpack-dev-server": "^3.2.1",
-    "html-webpack-plugin": "^3.2.0"
+    "html-webpack-plugin": "^3.2.0",
+    "chai": "^4.2.0",
+    "chai-http": "^4.2.1",
+    "mocha": "^6.0.2"
   }
 }
