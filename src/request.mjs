@@ -1,5 +1,3 @@
-import { CompileDev, CompileResource } from "./compile";
-
 export default class Request {
   constructor({ req, dirname, units, currentName, optional, mode }) {
     this.mode = "request";
@@ -23,10 +21,8 @@ export default class Request {
     let resources;
     if (extension === ".js") {
       path.resolvePath = path.filePath;
-      resources = false;
     } else {
       path.resolvePath = path.resPath;
-      resources = true;
     }
 
     if (module === currentName) {
@@ -43,8 +39,7 @@ export default class Request {
       mode: mode === "prod" ? "production" : "development",
       source: this.error ? null : source.source,
       resolvePath: path.resolvePath,
-      Compile: resources ? CompileResource : CompileDev,
-      resources,
+      resources: false,
       module,
       dirname,
       units,

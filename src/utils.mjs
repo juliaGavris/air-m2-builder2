@@ -1,4 +1,4 @@
-import fs from "fs";
+import { readFileSync } from "fs";
 import path from "path";
 import copyfiles from "copyfiles";
 import { exec } from "child_process";
@@ -13,9 +13,9 @@ class Utils {
   getAdditional(filename, requires, all = false) {
     let optDep;
     if (!all) {
-      optDep = JSON.parse(fs.readFileSync(filename, "utf8"))[requires];
+      optDep = JSON.parse(readFileSync(filename, "utf8"))[requires];
     } else {
-      optDep = JSON.parse(fs.readFileSync(filename, "utf8"));
+      optDep = JSON.parse(readFileSync(filename, "utf8"));
     }
     return optDep == null ? optDep : Object.keys(optDep).map(key => ({ module: key, source: optDep[key] }));
   }

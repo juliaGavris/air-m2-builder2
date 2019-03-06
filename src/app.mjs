@@ -1,4 +1,4 @@
-import fs from "fs";
+import { access, constants } from "fs";
 import Install from "./install";
 import Cache from "./cache";
 import Repl from "./repl";
@@ -31,7 +31,7 @@ export default class App {
           this.installer
             .get({ module, resolvePath, ...options })
             .then(() => {
-              fs.access(resolvePath, fs.constants.F_OK, err => {
+              access(resolvePath, constants.F_OK, err => {
                 this.requester.deleteInstance(module);
 
                 if (err) {

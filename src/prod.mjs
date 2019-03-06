@@ -3,10 +3,10 @@ import Install from "./install";
 import RequestOpt from "./request";
 
 const utils = new Utils();
-const install = new Install({ test: false });
 
-export default function({ dirname, currentName, units, optional }) {
+export default function({ dirname, currentName, units, optional, execute }) {
   let p = 0;
+  const install = new Install({ execute });
 
   (function bundle() {
     for (let i = p; i < optional.length; i++) {

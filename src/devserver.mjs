@@ -33,9 +33,7 @@ export default class DevServer {
   }
 
   build() {
-    const { dirname, currentName, units, optional } = this.options;
-
-    prod({ dirname, currentName, units, optional });
+    prod(this.options);
   }
 
   run() {

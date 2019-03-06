@@ -1,18 +1,11 @@
-import fs from "fs";
 import webpack from "webpack";
 import webpackCompileConfig from "../webpack-compiler.config.mjs";
 
 class Compile {
-  constructor(opt) {
+  constructor(opt, { main }) {
     this.opt = opt;
     const { dirname, module, units, mode } = this.opt;
 
-    const pkgPath = `${dirname}/node_modules/${module}/package.json`;
-    const pkg = fs.readFileSync(pkgPath, "utf8");
-    if (!pkg) {
-      throw `ERROR: file not found '${pkgPath}'`;
-    }
-    this.main = JSON.parse(pkg).main;
     const path =
       mode === "development"
         ? `${dirname}/node_modules/${module}/${units.dir}`
@@ -20,7 +13,7 @@ class Compile {
     const compileOpt = {
       mode,
       path,
-      entry: `${dirname}/node_modules/${module}/${this.main}`,
+      entry: `${dirname}/node_modules/${module}/${main}`,
       filename: "index.js"
     };
     this.config = webpackCompileConfig(compileOpt);

@@ -1,4 +1,4 @@
-import fs from "fs";
+import { existsSync, readFileSync } from "fs";
 import path from "path";
 import { UtilsDev } from "../src/utils.mjs";
 
@@ -44,8 +44,8 @@ export default function serverConfig(options = {}) {
   const mode = buildMode === "prod" ? "production" : "development";
   let port = PORT;
   let master = null;
-  if (fs.existsSync(gameConfigPath)) {
-    const json = JSON.parse(fs.readFileSync(gameConfigPath, "utf8"));
+  if (existsSync(gameConfigPath)) {
+    const json = JSON.parse(readFileSync(gameConfigPath, "utf8"));
     port = json.port || port;
     if (json.hasOwnProperty("master")) {
       master = json.master;
@@ -53,8 +53,8 @@ export default function serverConfig(options = {}) {
   }
 
   const pkgjsonPath = `${dirname}/node_modules/${BUILDER_NAME}/package.json`;
-  if (master === null && fs.existsSync(pkgjsonPath)) {
-    const json = JSON.parse(fs.readFileSync(pkgjsonPath, "utf8"));
+  if (master === null && existsSync(pkgjsonPath)) {
+    const json = JSON.parse(readFileSync(pkgjsonPath, "utf8"));
     if (
       json.hasOwnProperty(PKG_REQUIRED_BY) &&
       json[PKG_REQUIRED_BY] instanceof Array &&
@@ -68,13 +68,13 @@ export default function serverConfig(options = {}) {
 
   const optional = [];
   const unitsPath = `${dirname}/${units.dirS}.json`;
-  if (fs.existsSync(unitsPath)) {
+  if (existsSync(unitsPath)) {
     const additionals = utils.getAdditional(unitsPath, units.requires, true);
     if (additionals != null) {
       utils.addUnique(optional, additionals);
     }
   }
-  if (fs.existsSync(`${dirname}/package.json`)) {
+  if (existsSync(`${dirname}/package.json`)) {
     const additionals = utils.getAdditional(`${dirname}/package.json`, units.requires);
     if (additionals != null) {
       utils.addUnique(optional, additionals);
@@ -82,7 +82,7 @@ export default function serverConfig(options = {}) {
   }
   if (master !== currentName) {
     const pkgjsonPath = `${dirname}/node_modules/${master}/package.json`;
-    if (fs.existsSync(pkgjsonPath)) {
+    if (existsSync(pkgjsonPath)) {
       const additionals = utils.getAdditional(pkgjsonPath, units.requires);
       if (additionals != null) {
         utils.addUnique(optional, additionals);
@@ -91,7 +91,7 @@ export default function serverConfig(options = {}) {
   }
 
   const masterPath = [`${dirname}/${master === currentName ? "" : `node_modules/${master}`}`, "/src/m2.js"];
-  if (!fs.existsSync(masterPath.join(""))) {
+  if (!existsSync(masterPath.join(""))) {
     throw `Error: Cannot find 'm2.js' on source '${masterPath.join("")}'`;
   }
 

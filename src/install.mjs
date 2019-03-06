@@ -1,7 +1,5 @@
-import fs from "fs";
-import { Utils } from "./utils";
-
-const utils = new Utils();
+import { existsSync } from "fs";
+import postInstall from "./postinstall";
 
 export default class Install {
   constructor({ execute }) {
@@ -12,21 +10,14 @@ export default class Install {
 
   go(opt) {
     return this.install(opt).then(() => {
-      const { dirname, module, units, optional, Compile } = opt;
-      const pkgPath = dirname + `/node_modules/${module}/package.json`;
-      if (fs.existsSync(pkgPath)) {
-        const additionals = utils.getAdditional(pkgPath, units.requires);
-        if (additionals != null) {
-          utils.addUnique(optional, additionals);
-        }
-      }
+      const { Compiler, main } = postInstall(opt);
 
-      return new Compile(opt).run();
+      return new Compiler(opt, { main }).run();
     });
   }
 
   install(opt) {
-    if (opt.force || !fs.existsSync(opt.dirname + `/node_modules/${opt.module}`)) {
+    if (opt.force || !existsSync(opt.dirname + `/node_modules/${opt.module}`)) {
       return this.pushRequest(opt);
     } else {
       return new Promise(res => {
