@@ -10,6 +10,6 @@
   "author": "",
   "license": "ISC",
   "m2units": {
-    "test-module--game-unit": "test/test-modules/test-module--game-unit"
+    "test-module--game-resources": "test/test-modules/test-module--game-resources"
   }
 }

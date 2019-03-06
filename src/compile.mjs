@@ -1,7 +1,16 @@
+import { readFileSync, writeFileSync, mkdirSync } from "fs";
 import webpack from "webpack";
 import webpackCompileConfig from "../webpack-compiler.config.mjs";
 
-class Compile {
+class CompileResource {
+  run() {
+    return new Promise(resolve => {
+      resolve();
+    });
+  }
+}
+
+class CompileDev {
   constructor(opt, { main }) {
     this.opt = opt;
     const { dirname, module, units, mode } = this.opt;
@@ -18,17 +27,7 @@ class Compile {
     };
     this.config = webpackCompileConfig(compileOpt);
   }
-}
 
-class CompileResource extends Compile {
-  run() {
-    return new Promise(resolve => {
-      resolve();
-    });
-  }
-}
-
-class CompileDev extends Compile {
   run() {
     return new Promise((res, rej) => {
       console.log(`compile: ${this.opt.module} ...`);
@@ -50,4 +49,69 @@ class CompileDev extends Compile {
   }
 }
 
-export { CompileDev, CompileResource };
+class CompileHtml {
+  constructor(opt) {
+    const { mode, resolvePath } = opt;
+    this.config = {
+      configs: [],
+      scripts: [],
+      path: resolvePath.slice(0, resolvePath.lastIndexOf("/"))
+    };
+
+    this.htmlText = readFileSync(resolvePath).asciiSlice();
+    const sources = this.htmlText.match(/(?<=<[Ss][Cc][Rr][Ii][Pp][Tt]>)([\s\S]*?)(?=<\/[Ss][Cc][Rr][Ii][Pp][Tt]>)/g);
+    if (sources === null) {
+      return;
+    }
+
+    const { configs, scripts, path } = this.config;
+    sources.forEach((data, i) => {
+      const filename = `/script${i}.js`;
+      const filenameBundle = `script${i}-bundle.js`;
+
+      writeFileSync(path + filename, data, "utf8");
+
+      const compileOpt = {
+        mode,
+        path,
+        entry: path + filename,
+        filename: filenameBundle
+      };
+      configs.push(webpackCompileConfig(compileOpt));
+
+      scripts.push({ file: `${path}/${filenameBundle}`, data, idx: this.htmlText.indexOf(data) });
+    });
+  }
+
+  run() {
+    return new Promise(resolve => {
+      const { configs, scripts, path } = this.config;
+      const promises = [];
+
+      configs.forEach(config => {
+        const compiler = webpack(config);
+        promises.push(
+          new Promise(res => {
+            compiler.run(() => {
+              res();
+            });
+          })
+        );
+      });
+
+      Promise.all(promises).then(() => {
+        scripts.reverse().forEach(script => {
+          const { file, data, idx } = script;
+
+          const newdata = readFileSync(file);
+          this.htmlText = this.htmlText.slice(0, idx) + newdata + this.htmlText.slice(idx + data.length);
+        });
+        mkdirSync(`${path}/m2unit`);
+        writeFileSync(`${path}/m2unit/index.html`, this.htmlText, "utf8");
+        resolve();
+      });
+    });
+  }
+}
+
+export { CompileDev, CompileResource, CompileHtml };

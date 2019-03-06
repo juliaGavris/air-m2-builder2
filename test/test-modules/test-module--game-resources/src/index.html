@@ -4,5 +4,26 @@
     <meta charset="UTF-8" />
     <title>Title</title>
   </head>
-  <body></body>
+  <body>
+    <unit id="unit0">
+      <script>
+        function roots({ a = 1, b = 2, c = 1 }) {
+          const D = b * b - 4 * a * c;
+          if (D < 0) {
+            return null;
+          }
+          const [x1, x2] = [(-b + Math.sqrt(D)) / (2 * a), (-b - Math.sqrt(D)) / (2 * a)];
+          return { x1, x2 };
+        }
+        console.log(roots({ a: 3, b: 10, c: 3 }));
+      </script>
+    </unit>
+    <unit id="unit1">
+      <script>
+        import { readFileSync } from "fs";
+
+        console.log(readFileSync("C:\\Temp\\testix-test-read-file.txt"));
+      </script>
+    </unit>
+  </body>
 </html>

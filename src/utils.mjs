@@ -47,6 +47,12 @@ class Utils {
       .slice(0, from.indexOf("**"))
       .match(/\//g).length;
   }
+
+  getExtension(str) {
+    const match = str.match(/\.\w+$/g);
+
+    return match ? match[0] : null;
+  }
 }
 
 class UtilsDev extends Utils {

@@ -1,11 +1,11 @@
 import { existsSync, readFileSync } from "fs";
 import { Utils } from "./utils";
-import { CompileDev, CompileResource } from "./compile";
+import { CompileDev, CompileResource, CompileHtml } from "./compile";
 
 const utils = new Utils();
 
 export default function(opt) {
-  const { dirname, module, units, optional } = opt;
+  const { dirname, module, units, optional, resolvePath } = opt;
 
   const pkgPath = `${dirname}/node_modules/${module}/package.json`;
   if (!existsSync(pkgPath)) {
@@ -20,9 +20,11 @@ export default function(opt) {
   let Compiler = CompileDev;
   const pkg = readFileSync(pkgPath, "utf8");
   const { main } = JSON.parse(pkg);
-  const match = main.match(/\.\w+$/g);
-  const extension = match ? match[0] : null;
-  if (extension !== ".js") {
+  const extensionMain = utils.getExtension(main);
+  const extensionPath = utils.getExtension(resolvePath);
+  if (extensionPath === ".html") {
+    Compiler = CompileHtml;
+  } else if (extensionMain !== ".js") {
     opt.resources = true;
     Compiler = CompileResource;
   }
