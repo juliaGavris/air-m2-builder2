@@ -18,7 +18,6 @@ export default class Request {
     path.filePath = `${dirname}/node_modules/${module}/${units.dir}/${this.fileName}`;
     path.resPath = `${dirname}/node_modules/${module}/src/${this.fileName}`;
 
-    let resources;
     if (extension === ".js") {
       path.resolvePath = path.filePath;
     } else {
