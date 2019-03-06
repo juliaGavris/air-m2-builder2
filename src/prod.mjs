@@ -1,4 +1,4 @@
-import Utils from "./utils";
+import { Utils } from "./utils";
 import Install from "./install";
 import RequestOpt from "./request";
 

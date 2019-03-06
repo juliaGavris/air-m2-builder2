@@ -1,3 +1,5 @@
+import { CompileDev, CompileResource } from "./compile";
+
 export default class Request {
   constructor({ req, dirname, units, currentName, optional, mode }) {
     this.mode = "request";
@@ -41,6 +43,7 @@ export default class Request {
       mode: mode === "prod" ? "production" : "development",
       source: this.error ? null : source.source,
       resolvePath: path.resolvePath,
+      Compile: resources ? CompileResource : CompileDev,
       resources,
       module,
       dirname,

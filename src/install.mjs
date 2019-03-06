@@ -1,19 +1,18 @@
 import fs from "fs";
-import Compile from "./compile";
-import Utils from "./utils";
+import { Utils } from "./utils";
 
 const utils = new Utils();
 
 export default class Install {
-  constructor({ test }) {
+  constructor({ execute }) {
     this.__queue = [];
     this.__pending = false;
-    this.__test = test;
+    this.execute = execute;
   }
 
   go(opt) {
     return this.install(opt).then(() => {
-      const { dirname, module, units, optional } = opt;
+      const { dirname, module, units, optional, Compile } = opt;
       const pkgPath = dirname + `/node_modules/${module}/package.json`;
       if (fs.existsSync(pkgPath)) {
         const additionals = utils.getAdditional(pkgPath, units.requires);
@@ -81,7 +80,7 @@ export default class Install {
         console.log(`install: ${p} ...`);
       });
 
-      utils.execute({ pkg, test: this.__test, dirname: processing[0].dirname }).then(error => {
+      this.execute({ pkg, dirname: processing[0].dirname }).then(error => {
         if (error) {
           console.log(error);
           rej(`ERROR: install error\n${pkgList.join("\n")}`);

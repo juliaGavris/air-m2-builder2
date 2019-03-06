@@ -3,7 +3,7 @@ import path from "path";
 import copyfiles from "copyfiles";
 import { exec } from "child_process";
 
-export default class Utils {
+class Utils {
   constructor() {}
 
   getRandomInt(max, min = 0) {
@@ -47,22 +47,30 @@ export default class Utils {
       .slice(0, from.indexOf("**"))
       .match(/\//g).length;
   }
+}
 
-  execute({ pkg, test, dirname }) {
+class UtilsDev extends Utils {
+  execute({ pkg }) {
     return new Promise(res => {
-      if (test) {
-        const testDir = path.resolve(path.dirname(""));
-        const unit = pkg.match(/[-\w]+$/)[0];
-        const from = `${testDir}/${pkg}/**/*`;
-        this.copyFiles({ from, to: `${dirname}/node_modules/${unit}`, up: this.getUp(from) }).then(error => {
-          res(error);
-        });
-      } else {
-        const execString = `npm i --no-save --no-optional ${pkg}`;
-        exec(execString, error => {
-          res(error);
-        });
-      }
+      const execString = `npm i --no-save --no-optional ${pkg}`;
+      exec(execString, error => {
+        res(error);
+      });
     });
   }
 }
+
+class UtilsTest extends Utils {
+  execute({ pkg, dirname }) {
+    return new Promise(res => {
+      const testDir = path.resolve(path.dirname(""));
+      const unit = pkg.match(/[-\w]+$/)[0];
+      const from = `${testDir}/${pkg}/**/*`;
+      super.copyFiles({ from, to: `${dirname}/node_modules/${unit}`, up: super.getUp(from) }).then(error => {
+        res(error);
+      });
+    });
+  }
+}
+
+export { Utils, UtilsDev, UtilsTest };
