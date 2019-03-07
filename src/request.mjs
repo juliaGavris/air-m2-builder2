@@ -21,12 +21,13 @@ export default class Request {
     path.filePath = `${dirname}/node_modules/${module}/${units.dir}/${this.fileName}`;
     path.resPath = `${dirname}/node_modules/${module}/src/${this.fileName}`;
 
-    // if ([".js", ".html"].includes(extension)) {
-    if ([".js"].includes(extension)) {
+    if ([".js", ".html"].includes(extension)) {
+      // if ([".js"].includes(extension)) {
       path.resolvePath = path.filePath;
     } else {
       path.resolvePath = path.resPath;
     }
+    const { filePath, resPath, resolvePath } = path;
 
     if (module === currentName) {
       this.mode = "currentModule";
@@ -41,8 +42,9 @@ export default class Request {
       force: mode === "prod" ? true : false,
       mode: mode === "prod" ? "production" : "development",
       source: this.error ? null : source.source,
-      resolvePath: path.resolvePath,
       resources: false,
+      redundantPaths: { resPath, filePath },
+      resolvePath,
       module,
       dirname,
       units,

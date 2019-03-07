@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync, mkdirSync } from "fs";
+import { existsSync, readFileSync, writeFileSync, mkdirSync } from "fs";
 import webpack from "webpack";
 import webpackCompileConfig from "../webpack-compiler.config.mjs";
 
@@ -51,41 +51,52 @@ class CompileDev {
 
 class CompileHtml {
   constructor(opt) {
-    const { mode, resolvePath } = opt;
+    const {
+      mode,
+      resolvePath,
+      redundantPaths: { resPath }
+    } = opt;
     this.config = {
       configs: [],
       scripts: [],
-      path: resolvePath.slice(0, resolvePath.lastIndexOf("/"))
+      paths: { pathOriginal: resPath.slice(0, resPath.lastIndexOf("/")), pathResolve: resolvePath }
     };
 
-    this.htmlText = readFileSync(resolvePath).asciiSlice();
+    this.htmlText = readFileSync(resPath).asciiSlice();
     const sources = this.htmlText.match(/(?<=<[Ss][Cc][Rr][Ii][Pp][Tt]>)([\s\S]*?)(?=<\/[Ss][Cc][Rr][Ii][Pp][Tt]>)/g);
     if (sources === null) {
       return;
     }
 
-    const { configs, scripts, path } = this.config;
+    const {
+      configs,
+      scripts,
+      paths: { pathOriginal }
+    } = this.config;
     sources.forEach((data, i) => {
       const filename = `/script${i}.js`;
       const filenameBundle = `script${i}-bundle.js`;
 
-      writeFileSync(path + filename, data, "utf8");
+      writeFileSync(pathOriginal + filename, data, "utf8");
 
       const compileOpt = {
         mode,
-        path,
-        entry: path + filename,
+        path: pathOriginal,
+        entry: pathOriginal + filename,
         filename: filenameBundle
       };
       configs.push(webpackCompileConfig(compileOpt));
-
-      scripts.push({ file: `${path}/${filenameBundle}`, data, idx: this.htmlText.indexOf(data) });
+      scripts.push({ file: `${pathOriginal}/${filenameBundle}`, data, idx: this.htmlText.indexOf(data) });
     });
   }
 
   run() {
     return new Promise(resolve => {
-      const { configs, scripts, path } = this.config;
+      const {
+        configs,
+        scripts,
+        paths: { pathResolve }
+      } = this.config;
       const promises = [];
 
       configs.forEach(config => {
@@ -106,8 +117,11 @@ class CompileHtml {
           const newdata = readFileSync(file);
           this.htmlText = this.htmlText.slice(0, idx) + newdata + this.htmlText.slice(idx + data.length);
         });
-        mkdirSync(`${path}/m2unit`);
-        writeFileSync(`${path}/m2unit/index.html`, this.htmlText, "utf8");
+        const dirName = pathResolve.slice(0, pathResolve.lastIndexOf("/"));
+        if (!existsSync(dirName)) {
+          mkdirSync(dirName, { recursive: true });
+        }
+        writeFileSync(pathResolve, this.htmlText, "utf8");
         resolve();
       });
     });
