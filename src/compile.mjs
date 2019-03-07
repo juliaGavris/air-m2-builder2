@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, writeFileSync, mkdirSync } from "fs";
+import { existsSync, readFileSync, writeFileSync, readdirSync, mkdirSync, rmdirSync, unlinkSync } from "fs";
 import webpack from "webpack";
 import webpackCompileConfig from "../webpack-compiler.config.mjs";
 
@@ -10,7 +10,7 @@ class CompileResource {
   }
 }
 
-class CompileDev {
+class CompileSource {
   constructor(opt, { main }) {
     this.opt = opt;
     const { dirname, module, units, mode } = this.opt;
@@ -59,7 +59,11 @@ class CompileHtml {
     this.config = {
       configs: [],
       scripts: [],
-      paths: { pathOriginal: resPath.slice(0, resPath.lastIndexOf("/")), pathResolve: resolvePath }
+      paths: {
+        pathOriginal: resPath.slice(0, resPath.lastIndexOf("/")),
+        pathResolve: resolvePath,
+        tempFolder: "/$temp"
+      }
     };
 
     this.htmlText = readFileSync(resPath).asciiSlice();
@@ -71,22 +75,26 @@ class CompileHtml {
     const {
       configs,
       scripts,
-      paths: { pathOriginal }
+      paths: { pathOriginal, tempFolder }
     } = this.config;
     sources.forEach((data, i) => {
+      const tempDir = `${pathOriginal}${tempFolder}`;
       const filename = `/script${i}.js`;
       const filenameBundle = `script${i}-bundle.js`;
 
-      writeFileSync(pathOriginal + filename, data, "utf8");
+      if (!existsSync(tempDir)) {
+        mkdirSync(tempDir);
+      }
+      writeFileSync(`${tempDir}${filename}`, data, "utf8");
 
       const compileOpt = {
         mode,
-        path: pathOriginal,
-        entry: pathOriginal + filename,
+        path: tempDir,
+        entry: `${tempDir}${filename}`,
         filename: filenameBundle
       };
       configs.push(webpackCompileConfig(compileOpt));
-      scripts.push({ file: `${pathOriginal}/${filenameBundle}`, data, idx: this.htmlText.indexOf(data) });
+      scripts.push({ file: `${tempDir}/${filenameBundle}`, data, idx: this.htmlText.indexOf(data) });
     });
   }
 
@@ -95,7 +103,7 @@ class CompileHtml {
       const {
         configs,
         scripts,
-        paths: { pathResolve }
+        paths: { pathOriginal, pathResolve, tempFolder }
       } = this.config;
       const promises = [];
 
@@ -122,10 +130,19 @@ class CompileHtml {
           mkdirSync(dirName, { recursive: true });
         }
         writeFileSync(pathResolve, this.htmlText, "utf8");
+
+        const tempDir = `${pathOriginal}${tempFolder}`;
+        if (existsSync(tempDir)) {
+          readdirSync(tempDir).forEach(function(file) {
+            unlinkSync(`${tempDir}/${file}`);
+          });
+          rmdirSync(tempDir);
+        }
+
         resolve();
       });
     });
   }
 }
 
-export { CompileDev, CompileResource, CompileHtml };
+export { CompileSource, CompileResource, CompileHtml };

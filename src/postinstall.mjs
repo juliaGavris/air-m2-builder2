@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from "fs";
 import { Utils } from "./utils";
-import { CompileDev, CompileResource, CompileHtml } from "./compile";
+import { CompileSource, CompileResource, CompileHtml } from "./compile";
 
 const utils = new Utils();
 
@@ -17,7 +17,7 @@ export default function(opt) {
     utils.addUnique(optional, additionals);
   }
 
-  let Compiler = CompileDev;
+  let Compiler = CompileSource;
   const pkg = readFileSync(pkgPath, "utf8");
   const { main } = JSON.parse(pkg);
   const extensionMain = utils.getExtension(main);
