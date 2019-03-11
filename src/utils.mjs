@@ -4,8 +4,6 @@ import copyfiles from "copyfiles";
 import { exec } from "child_process";
 
 class Utils {
-  constructor() {}
-
   getRandomInt(max, min = 0) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
   }
@@ -21,10 +19,10 @@ class Utils {
   }
 
   addUnique(opt, add) {
-    const optMap = opt.map(e => e.module);
+    const optMap = [...opt.values()].map(e => e.module);
     add.forEach(e => {
       if (!optMap.includes(e.module)) {
-        opt.push(e);
+        opt.add(e);
       }
     });
   }
@@ -56,7 +54,7 @@ class Utils {
 }
 
 class UtilsDev extends Utils {
-  execute({ pkg }) {
+  static execute({ pkg }) {
     return new Promise(res => {
       const execString = `npm i --no-save --no-optional ${pkg}`;
       exec(execString, error => {
