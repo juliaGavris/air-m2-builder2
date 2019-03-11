@@ -28,7 +28,7 @@ export default class Request {
       this.mode = "currentModule";
     }
 
-    const source = optional.find(e => e.module === module);
+    const source = [...optional.values()].find(e => e.module === module);
     if (!source) {
       this.error = `ERROR '${module}': no install source error`;
     }

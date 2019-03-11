@@ -1,9 +1,10 @@
 #!/usr/bin/env node --experimental-modules
 
-import serverConfig from "../src/config.mjs";
-import DevServer from "../src/devserver.mjs";
+import serverConfig from "../src/config";
+import DevServer from "../src/devserver";
+import { UtilsDev } from "../src/utils";
 
-const config = serverConfig();
+const config = serverConfig({ execute: UtilsDev.execute });
 const devserver = new DevServer(config);
 devserver.precompile().then(() => {
   if (config.build) {

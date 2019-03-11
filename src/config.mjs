@@ -1,8 +1,8 @@
 import { existsSync, readFileSync } from "fs";
 import path from "path";
-import { UtilsDev } from "../src/utils.mjs";
+import { Utils } from "../src/utils";
 
-const utils = new UtilsDev();
+const utils = new Utils();
 
 const PORT = 9000;
 const BUILDER_NAME = "air-m2-builder2";
@@ -11,9 +11,6 @@ const PKG_REQUIRED_BY = "_requiredBy";
 export default function serverConfig(options = {}) {
   if (!options.hasOwnProperty("customDir")) {
     options.customDir = false;
-  }
-  if (!options.hasOwnProperty("execute")) {
-    options.execute = utils.execute;
   }
 
   const dirname = options.customDir ? options.customDir : path.resolve(path.dirname(""));
@@ -66,7 +63,7 @@ export default function serverConfig(options = {}) {
     }
   }
 
-  const optional = [];
+  const optional = new Set();
   const unitsPath = `${dirname}/${units.dirS}.json`;
   if (existsSync(unitsPath)) {
     const additionals = utils.getAdditional(unitsPath, units.requires, true);

@@ -5,20 +5,22 @@ import RequestOpt from "./request";
 const utils = new Utils();
 
 export default function({ dirname, currentName, units, optional, execute }) {
-  let p = 0;
   const install = new Install({ execute });
 
+  const iterator = optional.values();
   (function bundle() {
-    for (let i = p; i < optional.length; i++) {
-      const e = optional[i];
+    const value = iterator.next().value;
+    if (value !== undefined) {
+      const { module } = value;
       const req = {
-        originalUrl: `/m2units/${e.module}/index.js`,
-        path: `/m2units/${e.module}/index.js`
+        originalUrl: `/m2units/${module}/index.js`,
+        path: `/m2units/${module}/index.js`
       };
       const request = new RequestOpt({ req, dirname, units, currentName, optional, mode: "prod" });
 
       if (request.error) {
         console.log(request.error);
+        bundle();
       } else if (request.mode === "currentModule") {
         const from = `${dirname}/src/**/*`;
         utils
@@ -30,6 +32,7 @@ export default function({ dirname, currentName, units, optional, execute }) {
           })
           .then(() => {
             console.log(`copy: ${currentName} -- ok`);
+            bundle();
           });
       } else {
         const opt = request.options;
@@ -44,14 +47,13 @@ export default function({ dirname, currentName, units, optional, execute }) {
               })
               .then(() => {
                 console.log(`copy: ${opt.module} -- ok`);
+                bundle();
               });
-          }
-          if (p < optional.length) {
+          } else {
             bundle();
           }
         });
       }
     }
-    p = optional.length;
   })();
 }
