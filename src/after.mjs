@@ -8,12 +8,13 @@ export default function after({ dirname, currentName, units, optional, app: { re
     app.get(`/${units.dirS}/*`, (req, res) => {
       const request = new Request({ req, dirname, units, currentName, optional, execute, mode: "dev" });
 
+      if (request.mode === "currentModule") {
+        res.sendFile(`${dirname}/src/${request.fileName}`);
+        return;
+      }
       if (request.error) {
         console.log(request.error);
         res.send(request.error);
-        return;
-      } else if (request.mode === "currentModule") {
-        res.sendFile(`${dirname}/src/${request.fileName}`);
         return;
       }
 
