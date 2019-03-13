@@ -1,7 +1,8 @@
-import { readFileSync } from "fs";
+import { readFileSync, readdirSync, statSync } from "fs";
 import path from "path";
 import copyfiles from "copyfiles";
 import { exec } from "child_process";
+import { CompileHtml } from "./compile";
 
 class Utils {
   getRandomInt(max, min = 0) {
@@ -50,6 +51,46 @@ class Utils {
     const match = str.match(/\.\w+$/g);
 
     return match ? match[0] : null;
+  }
+
+  getAllFiles(dir, extensions = [], filelist = []) {
+    const files = readdirSync(dir);
+    files.forEach(file => {
+      const fileFullPath = `${dir}${/\/$/.test(dir) ? "" : "/"}${file}`;
+      if (statSync(fileFullPath).isDirectory()) {
+        filelist = this.getAllFiles(`${fileFullPath}/`, extensions, filelist);
+      } else {
+        if (extensions.length === 0 || extensions.includes(this.getExtension(file))) {
+          filelist.push(fileFullPath);
+        }
+      }
+    });
+
+    return filelist;
+  }
+
+  prodCopyCompile({ module, from, to }) {
+    return new Promise(resolve => {
+      this.copyFiles({
+        from,
+        to,
+        up: this.getUp(from)
+      }).then(() => {
+        const promises = [];
+        this.getAllFiles(to, [".html"]).forEach(path => {
+          const compileOpt = {
+            mode: "development",
+            resolvePath: path,
+            redundantPaths: { resPath: path }
+          };
+          promises.push(new CompileHtml(compileOpt).run());
+        });
+        Promise.all(promises).then(() => {
+          console.log(`copy/compile: ${module} -- ok`);
+          resolve();
+        });
+      });
+    });
   }
 }
 

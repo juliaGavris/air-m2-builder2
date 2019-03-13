@@ -22,7 +22,6 @@ export default class Request {
     path.resPath = `${dirname}/node_modules/${module}/src/${this.fileName}`;
 
     if ([".js", ".html"].includes(extension)) {
-      // if ([".js"].includes(extension)) {
       path.resolvePath = path.filePath;
     } else {
       path.resolvePath = path.resPath;

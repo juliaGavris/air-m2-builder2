@@ -9,7 +9,7 @@ export default function({ dirname, currentName, units, optional, execute }) {
 
   const iterator = optional.values();
   (function bundle() {
-    const value = iterator.next().value;
+    const { value } = iterator.next();
     if (value !== undefined) {
       const { module } = value;
       const req = {
@@ -22,31 +22,26 @@ export default function({ dirname, currentName, units, optional, execute }) {
         console.log(request.error);
         bundle();
       } else if (request.mode === "currentModule") {
-        const from = `${dirname}/src/**/*`;
         utils
-          .copyFiles({
-            from,
-            to: `${dirname}/dist/${units.dirS}/${currentName}`,
-            up: utils.getUp(from),
-            module: currentName
+          .prodCopyCompile({
+            module: currentName,
+            from: `${dirname}/src/**/*`,
+            to: `${dirname}/dist/${units.dirS}/${currentName}`
           })
           .then(() => {
-            console.log(`copy: ${currentName} -- ok`);
             bundle();
           });
       } else {
         const opt = request.options;
         install.go(opt).then(() => {
           if (opt.resources) {
-            const from = `${dirname}/node_modules/${opt.module}/src/**/*`;
             utils
-              .copyFiles({
-                from,
-                to: `${dirname}/dist/${units.dirS}/${opt.module}`,
-                up: utils.getUp(from)
+              .prodCopyCompile({
+                module: opt.module,
+                from: `${dirname}/node_modules/${opt.module}/src/**/*`,
+                to: `${dirname}/dist/${units.dirS}/${opt.module}`
               })
               .then(() => {
-                console.log(`copy: ${opt.module} -- ok`);
                 bundle();
               });
           } else {
