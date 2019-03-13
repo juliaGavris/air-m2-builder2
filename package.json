@@ -17,6 +17,8 @@
   "author": "ai.2019",
   "license": "ISC",
   "dependencies": {
+    "@babel/core": "^7.1.5",
+    "@babel/preset-env": "^7.1.5",
     "air-html": "^0.1.10",
     "air-m2": "^0.5.6",
     "copyfiles": "^2.1.0",
