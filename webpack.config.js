@@ -22,6 +22,7 @@ module.exports = function(mode, dirname, masterPath) {
     module: {
       rules: [
         {
+          test: /\.js$/,
           use: {
             loader: "babel-loader",
             options: {
