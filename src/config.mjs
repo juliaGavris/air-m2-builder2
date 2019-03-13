@@ -57,7 +57,8 @@ export default function serverConfig(options = {}) {
       json[PKG_REQUIRED_BY] instanceof Array &&
       json[PKG_REQUIRED_BY].length > 0
     ) {
-      master = json[PKG_REQUIRED_BY][0].match(/[\w-]+$/g)[0];
+      const __required = json[PKG_REQUIRED_BY][0].match(/[\w-]+$/g);
+      master = __required === null ? currentName : __required[0];
     } else {
       throw "Error: Cannot find source of 'm2.js' file.";
     }
