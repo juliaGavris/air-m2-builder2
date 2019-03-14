@@ -1,5 +1,5 @@
 export default ({ entry, path, filename, mode = "development" }) => {
-  return {
+  const obj = {
     mode,
     entry,
     externals: { m2: "__M2" },
@@ -8,8 +8,11 @@ export default ({ entry, path, filename, mode = "development" }) => {
       filename,
       library: "__m2unit__",
       libraryTarget: "this"
-    },
-    module: {
+    }
+  };
+
+  if (mode === "production") {
+    obj.module = {
       rules: [
         {
           test: /\.js$/,
@@ -30,6 +33,8 @@ export default ({ entry, path, filename, mode = "development" }) => {
           }
         }
       ]
-    }
-  };
+    };
+  }
+
+  return obj;
 };
