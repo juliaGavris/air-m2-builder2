@@ -28,9 +28,9 @@ class Utils {
     });
   }
 
-  copyFiles({ from, to, up }) {
+  copyFiles({ from, to, up, exclude = [] }) {
     return new Promise(res => {
-      copyfiles([from, to], { up }, err => {
+      copyfiles([from, to], { up, exclude }, err => {
         if (err) {
           throw err;
         }
@@ -53,14 +53,18 @@ class Utils {
     return match ? match[0] : null;
   }
 
-  getAllFiles(dir, extensions = [], filelist = []) {
+  getAllFiles(dir, extensions = [], includes = true, filelist = []) {
     const files = readdirSync(dir);
     files.forEach(file => {
       const fileFullPath = `${dir}${/\/$/.test(dir) ? "" : "/"}${file}`;
       if (statSync(fileFullPath).isDirectory()) {
-        filelist = this.getAllFiles(`${fileFullPath}/`, extensions, filelist);
+        filelist = this.getAllFiles(`${fileFullPath}/`, extensions, includes, filelist);
       } else {
-        if (extensions.length === 0 || extensions.includes(this.getExtension(file))) {
+        if (
+          extensions.length === 0 ||
+          (extensions.includes(this.getExtension(file)) && includes) ||
+          (!extensions.includes(this.getExtension(file)) && !includes)
+        ) {
           filelist.push(fileFullPath);
         }
       }
@@ -74,7 +78,8 @@ class Utils {
       this.copyFiles({
         from,
         to,
-        up: this.getUp(from)
+        up: this.getUp(from),
+        exclude: `${from}.js`
       }).then(() => {
         const promises = [];
         this.getAllFiles(to, [".html"]).forEach(path => {
@@ -86,7 +91,9 @@ class Utils {
           promises.push(new CompileHtml(compileOpt).run());
         });
         Promise.all(promises).then(() => {
-          console.log(`copy/compile: ${module} -- ok`);
+          if (promises.length > 0) {
+            console.log(`copy/compile: ${module} -- ok`);
+          }
           resolve();
         });
       });

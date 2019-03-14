@@ -41,7 +41,6 @@ export default class Request {
       force: mode === "prod" ? true : false,
       mode: mode === "prod" ? "production" : "development",
       source: this.error ? null : source.source,
-      resources: false,
       redundantPaths: { resPath, filePath },
       resolvePath,
       module,

@@ -25,7 +25,6 @@ export default function(opt) {
   if (extensionPath === ".html") {
     Compiler = CompileHtml;
   } else if (extensionMain !== ".js") {
-    opt.resources = true;
     Compiler = CompileResource;
   }
 

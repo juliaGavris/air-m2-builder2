@@ -40,19 +40,15 @@ export default function({ dirname, currentName, units, optional, execute }) {
       } else {
         const opt = request.options;
         install.go(opt).then(() => {
-          if (opt.resources) {
-            utils
-              .prodCopyCompile({
-                module: opt.module,
-                from: `${dirname}/node_modules/${opt.module}/src/**/*`,
-                to: `${dirname}/dist/${units.dirS}/${opt.module}`
-              })
-              .then(() => {
-                bundle();
-              });
-          } else {
-            bundle();
-          }
+          utils
+            .prodCopyCompile({
+              module: opt.module,
+              from: `${dirname}/node_modules/${opt.module}/src/**/*`,
+              to: `${dirname}/dist/${units.dirS}/${opt.module}`
+            })
+            .then(() => {
+              bundle();
+            });
         });
       }
     }
