@@ -5,7 +5,7 @@ import { CompileSource, CompileResource, CompileHtml } from "./compile";
 const utils = new Utils();
 
 export default function(opt) {
-  const { dirname, module, units, optional, resolvePath } = opt;
+  const { mode, dirname, module, units, optional, resolvePath } = opt;
 
   const pkgPath = `${dirname}/node_modules/${module}/package.json`;
   if (!existsSync(pkgPath)) {
@@ -29,5 +29,11 @@ export default function(opt) {
     Compiler = CompileResource;
   }
 
-  return { Compiler, main };
+  const path =
+    mode === "development"
+      ? `${dirname}/node_modules/${module}/${units.dir}`
+      : `${dirname}/dist/${units.dirS}/${module}`;
+  const entry = `${dirname}/node_modules/${module}/${main}`;
+
+  return { Compiler, paths: { path, entry } };
 }

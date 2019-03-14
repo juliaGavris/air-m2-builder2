@@ -1,4 +1,5 @@
 import { Utils } from "./utils";
+import { CompileSource } from "./compile";
 import Install from "./install";
 import RequestOpt from "./request";
 
@@ -29,7 +30,12 @@ export default function({ dirname, currentName, units, optional, execute }) {
             to: `${dirname}/dist/${units.dirS}/${currentName}`
           })
           .then(() => {
-            bundle();
+            const opt = request.options;
+            const path = `${dirname}/dist/${opt.units.dirS}/${opt.module}`;
+            const entry = `${dirname}/src/index.js`;
+            new CompileSource(opt, { path, entry }).run().then(() => {
+              bundle();
+            });
           });
       } else {
         const opt = request.options;

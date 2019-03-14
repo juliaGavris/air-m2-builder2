@@ -10,9 +10,12 @@ export default class Install {
 
   go(opt) {
     return this.install(opt).then(() => {
-      const { Compiler, main } = postInstall(opt);
+      const {
+        Compiler,
+        paths: { path, entry }
+      } = postInstall(opt);
 
-      return new Compiler(opt, { main }).run();
+      return new Compiler(opt, { path, entry }).run();
     });
   }
 

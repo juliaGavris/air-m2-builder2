@@ -11,19 +11,14 @@ class CompileResource {
 }
 
 class CompileSource {
-  constructor(opt, { main }) {
+  constructor(opt, { path, entry, filename }) {
     this.opt = opt;
-    const { dirname, module, units, mode } = this.opt;
 
-    const path =
-      mode === "development"
-        ? `${dirname}/node_modules/${module}/${units.dir}`
-        : `${dirname}/dist/${units.dirS}/${module}`;
     const compileOpt = {
-      mode,
+      mode: this.opt.mode,
       path,
-      entry: `${dirname}/node_modules/${module}/${main}`,
-      filename: "index.js"
+      entry,
+      filename: filename || "index.js"
     };
     this.config = webpackCompileConfig(compileOpt);
   }
@@ -93,7 +88,7 @@ class CompileHtml {
         entry: `${tempDir}${filename}`,
         filename: filenameBundle
       };
-      configs.push(webpackCompileConfig(compileOpt));
+      configs.push({ path: tempDir, entry: `${tempDir}${filename}`, filename: filenameBundle });
       scripts.push({ file: `${tempDir}/${filenameBundle}`, data, idx: this.htmlText.indexOf(data) });
     });
   }
@@ -108,14 +103,8 @@ class CompileHtml {
       const promises = [];
 
       configs.forEach(config => {
-        const compiler = webpack(config);
-        promises.push(
-          new Promise(res => {
-            compiler.run(() => {
-              res();
-            });
-          })
-        );
+        const { path, entry, filename } = config;
+        promises.push(new CompileSource(opt, { path, entry, filename }).run());
       });
 
       Promise.all(promises).then(() => {
