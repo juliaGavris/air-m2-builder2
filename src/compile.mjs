@@ -11,14 +11,14 @@ class CompileResource {
 }
 
 class CompileSource {
-  constructor(opt, { path, entry, filename }) {
+  constructor(opt, { path, entry }) {
     this.opt = opt;
 
     const compileOpt = {
       mode: this.opt.mode,
       path,
       entry,
-      filename: filename || "index.js"
+      filename: "index.js"
     };
     this.config = webpackCompileConfig(compileOpt);
   }
@@ -88,7 +88,7 @@ class CompileHtml {
         entry: `${tempDir}${filename}`,
         filename: filenameBundle
       };
-      configs.push({ path: tempDir, entry: `${tempDir}${filename}`, filename: filenameBundle });
+      configs.push(webpackCompileConfig(compileOpt));
       scripts.push({ file: `${tempDir}/${filenameBundle}`, data, idx: this.htmlText.indexOf(data) });
     });
   }
@@ -103,8 +103,14 @@ class CompileHtml {
       const promises = [];
 
       configs.forEach(config => {
-        const { path, entry, filename } = config;
-        promises.push(new CompileSource(opt, { path, entry, filename }).run());
+        const compiler = webpack(config);
+        promises.push(
+          new Promise(res => {
+            compiler.run(() => {
+              res();
+            });
+          })
+        );
       });
 
       Promise.all(promises).then(() => {
