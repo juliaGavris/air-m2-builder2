@@ -1,7 +1,7 @@
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 
 module.exports = function(mode, dirname, masterPath) {
-  return {
+  const obj = {
     mode,
     entry: [`${__dirname}/src/m2.js`, masterPath.join("")],
     externals: {
@@ -18,8 +18,11 @@ module.exports = function(mode, dirname, masterPath) {
         template: masterPath.join("").replace(/\.js$/g, ".html"),
         filename: "index.html"
       })
-    ],
-    module: {
+    ]
+  };
+
+  if (mode === "production") {
+    obj.module = {
       rules: [
         {
           test: /\.js$/,
@@ -40,6 +43,8 @@ module.exports = function(mode, dirname, masterPath) {
           }
         }
       ]
-    }
-  };
+    };
+  }
+
+  return obj;
 };
