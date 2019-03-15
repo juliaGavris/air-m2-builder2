@@ -4,8 +4,8 @@ import webpackConfig from "../webpack.config.js";
 import webpackCompileConfig from "../webpack-compiler.config.mjs";
 import WebpackDevServer from "webpack-dev-server";
 import App from "../src/app";
+import BuildProd from "../src/prod";
 import after from "../src/after";
-import prod from "../src/prod";
 
 export default class DevServer {
   constructor(options) {
@@ -33,7 +33,7 @@ export default class DevServer {
   }
 
   build() {
-    prod(this.options);
+    new BuildProd(this.options).next();
   }
 
   run() {

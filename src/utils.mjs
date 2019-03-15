@@ -92,7 +92,7 @@ class Utils {
         });
         Promise.all(promises).then(() => {
           if (promises.length > 0) {
-            console.log(`copy/compile: ${module} -- ok`);
+            console.log(`copy/compile_html: ${module} -- ok`);
           }
           resolve();
         });
