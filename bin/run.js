@@ -2,6 +2,6 @@
 
 const { exec } = require("child_process");
 
-exec("node --experimental-modules ./bin/server.mjs", error => {
+exec(`node --experimental-modules ${__dirname}/server.mjs`, error => {
   throw error;
 });
