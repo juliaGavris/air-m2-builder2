@@ -1,5 +1,3 @@
-#!/usr/bin/env node --experimental-modules
-
 import serverConfig from "../src/config";
 import DevServer from "../src/devserver";
 import { UtilsDev } from "../src/utils";
