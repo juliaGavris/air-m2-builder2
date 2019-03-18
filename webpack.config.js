@@ -25,7 +25,7 @@ module.exports = function(mode, dirname, masterPath) {
     obj.module = {
       rules: [
         {
-          test: /\.js$/,
+          test: /\.m?js$/,
           use: {
             loader: "babel-loader",
             options: {

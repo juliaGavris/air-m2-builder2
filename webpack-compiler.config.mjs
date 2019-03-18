@@ -15,7 +15,7 @@ export default ({ entry, path, filename, mode = "development" }) => {
     obj.module = {
       rules: [
         {
-          test: /\.js$/,
+          test: /\.m?js$/,
           use: {
             loader: "babel-loader",
             options: {
