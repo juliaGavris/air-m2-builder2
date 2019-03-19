@@ -1,11 +1,11 @@
 import fs from "fs";
 import path from "path";
 import Mocha from "mocha";
-import ServerConfig from "../src/config.mjs";
+import serverConfig from "../src/config.mjs";
 import DevServer from "../src/devserver.mjs";
-import Utils from "../src/utils.mjs";
+import { UtilsTest } from "../src/utils.mjs";
 
-const utils = new Utils();
+const utils = new UtilsTest();
 const mocha = new Mocha();
 const dirname = path.resolve(path.dirname(""));
 const fakeDirname = `${dirname}/node_modules/testix-game`;
@@ -20,7 +20,7 @@ Promise.all(
     return utils.copyFiles({ from, to, up: utils.getUp(from) });
   })
 ).then(() => {
-  const config = new ServerConfig({ customDir: fakeDirname }).config;
+  const config = serverConfig({ customDir: fakeDirname, execute: utils.execute });
 
   const testDir = `${dirname}/test/tests`;
   fs.readdirSync(testDir)
@@ -35,6 +35,6 @@ Promise.all(
     runner.on("end", () => {
       process.exit();
     });
-    devserver.run({ test: true });
+    devserver.run();
   });
 });

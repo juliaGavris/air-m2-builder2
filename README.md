@@ -11,8 +11,8 @@
 ```json
 {
   "scripts": {
-    "build": "air-m2-builder2 --build:prod",
-    "dev": "air-m2-builder2"
+    "build": "node --experimental-modules ./node_modules/air-m2-builder2/bin/server.mjs --build:prod",
+    "dev": "node --experimental-modules ./node_modules/air-m2-builder2/bin/server.mjs"
   }
 }
 ```

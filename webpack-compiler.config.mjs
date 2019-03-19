@@ -1,5 +1,5 @@
 export default ({ entry, path, filename, mode = "development" }) => {
-  return {
+  const obj = {
     mode,
     entry,
     externals: { m2: "__M2" },
@@ -10,4 +10,31 @@ export default ({ entry, path, filename, mode = "development" }) => {
       libraryTarget: "this"
     }
   };
+
+  if (mode === "production") {
+    obj.module = {
+      rules: [
+        {
+          test: /\.m?js$/,
+          use: {
+            loader: "babel-loader",
+            options: {
+              presets: [
+                [
+                  "@babel/preset-env",
+                  {
+                    targets: {
+                      browsers: ["last 2 versions", "ie >= 8"]
+                    }
+                  }
+                ]
+              ]
+            }
+          }
+        }
+      ]
+    };
+  }
+
+  return obj;
 };

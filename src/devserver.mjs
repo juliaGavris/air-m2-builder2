@@ -3,17 +3,17 @@ import webpack from "webpack";
 import webpackConfig from "../webpack.config.js";
 import webpackCompileConfig from "../webpack-compiler.config.mjs";
 import WebpackDevServer from "webpack-dev-server";
-import App from "../src/app.mjs";
-import after from "../src/after.mjs";
-import prod from "../src/prod.mjs";
+import App from "../src/app";
+import BuildProd from "../src/prod";
+import after from "../src/after";
 
 export default class DevServer {
   constructor(options) {
-    this.opt = options;
+    this.options = options;
   }
 
   precompile() {
-    const { mode, dirname, masterPath, currentName } = this.opt;
+    const { mode, dirname, masterPath, currentName } = this.options;
 
     return new Promise(res => {
       webpack(webpackConfig(mode, dirname, masterPath)).run(err => {
@@ -33,15 +33,13 @@ export default class DevServer {
   }
 
   build() {
-    const { dirname, currentName, units, optional } = this.opt;
-
-    prod({ dirname, currentName, units, optional });
+    new BuildProd(this.options).next();
   }
 
-  run(opt = { test: false }) {
-    const { dirname, master, units, currentName, optional, port } = this.opt;
+  run() {
+    const { dirname, master, units, currentName, optional, port, execute } = this.options;
 
-    const app = new App({ test: opt.test });
+    const app = new App({ execute });
 
     const server = new WebpackDevServer(this.compiler, {
       headers: { "Access-Control-Allow-Origin": "*" },

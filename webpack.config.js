@@ -1,9 +1,12 @@
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 
 module.exports = function(mode, dirname, masterPath) {
-  return {
+  const obj = {
     mode,
     entry: [`${__dirname}/src/m2.js`, masterPath.join("")],
+    externals: {
+      m2: "__M2"
+    },
     output: {
       path: `${mode === "production" ? dirname : masterPath[0]}/dist`,
       filename: "m2.js"
@@ -17,4 +20,31 @@ module.exports = function(mode, dirname, masterPath) {
       })
     ]
   };
+
+  if (mode === "production") {
+    obj.module = {
+      rules: [
+        {
+          test: /\.m?js$/,
+          use: {
+            loader: "babel-loader",
+            options: {
+              presets: [
+                [
+                  "@babel/preset-env",
+                  {
+                    targets: {
+                      browsers: ["last 2 versions", "ie >= 8"]
+                    }
+                  }
+                ]
+              ]
+            }
+          }
+        }
+      ]
+    };
+  }
+
+  return obj;
 };

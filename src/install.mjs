@@ -1,33 +1,26 @@
-import fs from "fs";
-import Compile from "./compile";
-import Utils from "./utils";
-
-const utils = new Utils();
+import { existsSync } from "fs";
+import postInstall from "./postinstall";
 
 export default class Install {
-  constructor({ test }) {
+  constructor({ execute }) {
     this.__queue = [];
     this.__pending = false;
-    this.__test = test;
+    this.execute = execute;
   }
 
   go(opt) {
     return this.install(opt).then(() => {
-      const { dirname, module, units, optional } = opt;
-      const pkgPath = dirname + `/node_modules/${module}/package.json`;
-      if (fs.existsSync(pkgPath)) {
-        const additionals = utils.getAdditional(pkgPath, units.requires);
-        if (additionals != null) {
-          utils.addUnique(optional, additionals);
-        }
-      }
+      const {
+        Compiler,
+        paths: { path, entry }
+      } = postInstall(opt);
 
-      return new Compile(opt).run();
+      return new Compiler(opt, { path, entry }).run();
     });
   }
 
   install(opt) {
-    if (opt.force || !fs.existsSync(opt.dirname + `/node_modules/${opt.module}`)) {
+    if (opt.force || !existsSync(opt.dirname + `/node_modules/${opt.module}`)) {
       return this.pushRequest(opt);
     } else {
       return new Promise(res => {
@@ -81,7 +74,7 @@ export default class Install {
         console.log(`install: ${p} ...`);
       });
 
-      utils.execute({ pkg, test: this.__test, dirname: processing[0].dirname }).then(error => {
+      this.execute({ pkg, dirname: processing[0].dirname }).then(error => {
         if (error) {
           console.log(error);
           rej(`ERROR: install error\n${pkgList.join("\n")}`);

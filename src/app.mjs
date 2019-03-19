@@ -1,10 +1,10 @@
-import fs from "fs";
+import { access, constants } from "fs";
 import Install from "./install";
 import Cache from "./cache";
 import Repl from "./repl";
 
 export default class App {
-  constructor({ test }) {
+  constructor({ execute }) {
     const repl = new Repl();
     repl.start();
     repl.subscribe("event--cache-cleared-all", () => {
@@ -23,7 +23,7 @@ export default class App {
       console.log(msg);
     });
 
-    const install = new Install({ test });
+    const install = new Install({ execute });
     this.installer = new Cache({ createInstance: opt => install.go(opt) });
     this.requester = new Cache({
       createInstance: ({ module, resolvePath, ...options }) => {
@@ -31,7 +31,7 @@ export default class App {
           this.installer
             .get({ module, resolvePath, ...options })
             .then(() => {
-              fs.access(resolvePath, fs.constants.F_OK, err => {
+              access(resolvePath, constants.F_OK, err => {
                 this.requester.deleteInstance(module);
 
                 if (err) {
