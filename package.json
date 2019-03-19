@@ -7,7 +7,7 @@
     "test": "node --experimental-modules ./test/test.mjs"
   },
   "bin": {
-    "air-m2-builder2": "./bin/run.js"
+    "air-m2-builder2": "./bin/server.mjs"
   },
   "repository": {
     "type": "git",
