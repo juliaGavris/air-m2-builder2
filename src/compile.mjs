@@ -66,9 +66,6 @@ class CompileHtml {
     this.htmlText = readFileSync(resPath).asciiSlice();
     const jsSources = this.htmlText.match(/(?<=<[Ss][Cc][Rr][Ii][Pp][Tt]>)([\s\S]*?)(?=<\/[Ss][Cc][Rr][Ii][Pp][Tt]>)/g);
     const cssSources = this.htmlText.match(/(?<=<[Ss][Tt][Yy][Ll][Ee]>)([\s\S]*?)(?=<\/[Ss][Tt][Yy][Ll][Ee]>)/g);
-    if (jsSources === null || cssSources === null) {
-      return;
-    }
 
     const {
       configs,
@@ -76,28 +73,32 @@ class CompileHtml {
       styles,
       paths: { pathOriginal, tempFolder }
     } = this.config;
-    jsSources.forEach((data, i) => {
-      const tempDir = `${pathOriginal}${tempFolder}`;
-      const filename = `/script${i}.js`;
-      const filenameBundle = `script${i}-bundle.js`;
+    if (jsSources !== null) {
+      jsSources.forEach((data, i) => {
+        const tempDir = `${pathOriginal}${tempFolder}`;
+        const filename = `/script${i}.js`;
+        const filenameBundle = `script${i}-bundle.js`;
 
-      if (!existsSync(tempDir)) {
-        mkdirSync(tempDir);
-      }
-      writeFileSync(`${tempDir}${filename}`, data, "utf8");
+        if (!existsSync(tempDir)) {
+          mkdirSync(tempDir);
+        }
+        writeFileSync(`${tempDir}${filename}`, data, "utf8");
 
-      const compileOpt = {
-        mode,
-        path: tempDir,
-        entry: `${tempDir}${filename}`,
-        filename: filenameBundle
-      };
-      configs.push(webpackCompileConfig(compileOpt));
-      scripts.push({ file: `${tempDir}/${filenameBundle}`, data, idx: this.htmlText.indexOf(data) });
-    });
-    cssSources.forEach(data => {
-      styles.push({ data, idx: this.htmlText.indexOf(data) });
-    });
+        const compileOpt = {
+          mode,
+          path: tempDir,
+          entry: `${tempDir}${filename}`,
+          filename: filenameBundle
+        };
+        configs.push(webpackCompileConfig(compileOpt));
+        scripts.push({ file: `${tempDir}/${filenameBundle}`, data, idx: this.htmlText.indexOf(data) });
+      });
+    }
+    if (cssSources !== null) {
+      cssSources.forEach(data => {
+        styles.push({ data });
+      });
+    }
   }
 
   run() {
@@ -125,7 +126,7 @@ class CompileHtml {
         promises.push(
           new Promise(res => {
             sass.compile(data, result => {
-              sassStyles[i] = result;
+              sassStyles[i] = result.text;
               res();
             });
           })
@@ -135,12 +136,13 @@ class CompileHtml {
       Promise.all(promises).then(() => {
         scripts.reverse().forEach(script => {
           const { file, data, idx } = script;
-
           const newdata = readFileSync(file);
           this.htmlText = this.htmlText.slice(0, idx) + newdata + this.htmlText.slice(idx + data.length);
         });
-        styles.forEach(({ data, idx }, i) => {
-          this.htmlText = this.htmlText.slice(0, idx) + sassStyles[i] + this.htmlText.slice(idx + data.length);
+        styles.reverse().forEach(({ data }, i) => {
+          const idx = this.htmlText.indexOf(data);
+          this.htmlText =
+            this.htmlText.slice(0, idx) + sassStyles[styles.length - i - 1] + this.htmlText.slice(idx + data.length);
         });
         const dirName = pathResolve.slice(0, pathResolve.lastIndexOf("/"));
         if (!existsSync(dirName)) {

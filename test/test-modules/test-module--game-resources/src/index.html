@@ -2,10 +2,30 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Build HTML Scripts with webpack</title>
+    <title>Build HTML Scripts with webpack and Styles with SASS</title>
   </head>
   <body>
     <unit id="unit0">
+      <style>
+        $colors: (red, green, blue);
+        $sizes: (
+          big: 100,
+          small: 50
+        );
+
+        @each $color in $colors {
+          .#{$color} {
+            background-color: $color;
+          }
+        }
+
+        @each $size, $value in $sizes {
+          .#{$size} {
+            width: $value + px;
+            height: $value + px;
+          }
+        }
+      </style>
       <script>
         function roots({ a = 1, b = 2, c = 1 }) {
           const D = b * b - 4 * a * c;
@@ -19,6 +39,24 @@
       </script>
     </unit>
     <unit id="unit1">
+      <style>
+        @mixin size($w, $h) {
+          width: $w;
+          height: $h;
+        }
+
+        div {
+          @include size(100px, 50px);
+
+          #color {
+            color: #f00;
+
+            .black {
+              background-color: #000;
+            }
+          }
+        }
+      </style>
       <script>
         import { readFileSync } from "fs";
 
