@@ -1,4 +1,5 @@
 import { existsSync, readFileSync, writeFileSync, readdirSync, mkdirSync, rmdirSync, unlinkSync } from "fs";
+import sass from "sass.js";
 import webpack from "webpack";
 import webpackCompileConfig from "../webpack-compiler.config.mjs";
 
@@ -54,6 +55,7 @@ class CompileHtml {
     this.config = {
       configs: [],
       scripts: [],
+      styles: [],
       paths: {
         pathOriginal: resPath.slice(0, resPath.lastIndexOf("/")),
         pathResolve: resolvePath,
@@ -62,17 +64,19 @@ class CompileHtml {
     };
 
     this.htmlText = readFileSync(resPath).asciiSlice();
-    const sources = this.htmlText.match(/(?<=<[Ss][Cc][Rr][Ii][Pp][Tt]>)([\s\S]*?)(?=<\/[Ss][Cc][Rr][Ii][Pp][Tt]>)/g);
-    if (sources === null) {
+    const jsSources = this.htmlText.match(/(?<=<[Ss][Cc][Rr][Ii][Pp][Tt]>)([\s\S]*?)(?=<\/[Ss][Cc][Rr][Ii][Pp][Tt]>)/g);
+    const cssSources = this.htmlText.match(/(?<=<[Ss][Tt][Yy][Ll][Ee]>)([\s\S]*?)(?=<\/[Ss][Tt][Yy][Ll][Ee]>)/g);
+    if (jsSources === null || cssSources === null) {
       return;
     }
 
     const {
       configs,
       scripts,
+      styles,
       paths: { pathOriginal, tempFolder }
     } = this.config;
-    sources.forEach((data, i) => {
+    jsSources.forEach((data, i) => {
       const tempDir = `${pathOriginal}${tempFolder}`;
       const filename = `/script${i}.js`;
       const filenameBundle = `script${i}-bundle.js`;
@@ -91,6 +95,9 @@ class CompileHtml {
       configs.push(webpackCompileConfig(compileOpt));
       scripts.push({ file: `${tempDir}/${filenameBundle}`, data, idx: this.htmlText.indexOf(data) });
     });
+    cssSources.forEach(data => {
+      styles.push({ data, idx: this.htmlText.indexOf(data) });
+    });
   }
 
   run() {
@@ -98,15 +105,27 @@ class CompileHtml {
       const {
         configs,
         scripts,
+        styles,
         paths: { pathOriginal, pathResolve, tempFolder }
       } = this.config;
       const promises = [];
+      const sassStyles = [];
 
       configs.forEach(config => {
         const compiler = webpack(config);
         promises.push(
           new Promise(res => {
             compiler.run(() => {
+              res();
+            });
+          })
+        );
+      });
+      styles.forEach(({ data }, i) => {
+        promises.push(
+          new Promise(res => {
+            sass.compile(data, result => {
+              sassStyles[i] = result;
               res();
             });
           })
@@ -120,6 +139,9 @@ class CompileHtml {
           const newdata = readFileSync(file);
           this.htmlText = this.htmlText.slice(0, idx) + newdata + this.htmlText.slice(idx + data.length);
         });
+        styles.forEach(({ data, idx }, i) => {
+          this.htmlText = this.htmlText.slice(0, idx) + sassStyles[i] + this.htmlText.slice(idx + data.length);
+        });
         const dirName = pathResolve.slice(0, pathResolve.lastIndexOf("/"));
         if (!existsSync(dirName)) {
           mkdirSync(dirName, { recursive: true });
@@ -128,7 +150,7 @@ class CompileHtml {
 
         const tempDir = `${pathOriginal}${tempFolder}`;
         if (existsSync(tempDir)) {
-          readdirSync(tempDir).forEach(function(file) {
+          readdirSync(tempDir).forEach(file => {
             unlinkSync(`${tempDir}/${file}`);
           });
           rmdirSync(tempDir);
