@@ -1,5 +1,5 @@
 import { existsSync, readFileSync, writeFileSync, readdirSync, mkdirSync, rmdirSync, unlinkSync } from "fs";
-import sass from "sass.js";
+import sass from "dart-sass";
 import webpack from "webpack";
 import webpackCompileConfig from "../webpack-compiler.config.mjs";
 
@@ -125,8 +125,8 @@ class CompileHtml {
       styles.forEach(({ data }, i) => {
         promises.push(
           new Promise(res => {
-            sass.compile(data, result => {
-              sassStyles[i] = result.text;
+            sass.render({ data }, (err, result) => {
+              sassStyles[i] = result.css.toString();
               res();
             });
           })
