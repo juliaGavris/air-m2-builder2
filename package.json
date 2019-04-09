@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "patch": "npm version patch && npm publish && git push origin",
+    "minor": "npm version minor && npm publish && git push origin",
     "test": "node --experimental-modules ./test/test.mjs"
   },
   "bin": {
