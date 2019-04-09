@@ -25,8 +25,12 @@ describe("Units", () => {
       .end((err, res) => {
         res.should.have.status(200);
         res.text.indexOf("<!DOCTYPE html>").should.be.equal(0);
-        res.text.indexOf("<title>Build HTML Scripts with webpack</title>").should.be.greaterThan(-1);
+        res.text
+          .indexOf("<title>Build HTML Scripts with webpack and Styles with SASS</title>")
+          .should.be.greaterThan(-1);
         res.text.indexOf("__webpack_require__").should.be.greaterThan(-1);
+        res.text.indexOf("@mixin").should.be.equal(-1);
+        res.text.indexOf("@each").should.be.equal(-1);
         done();
       });
   });

@@ -1,4 +1,5 @@
 import { existsSync, readFileSync, writeFileSync, readdirSync, mkdirSync, rmdirSync, unlinkSync } from "fs";
+import sass from "dart-sass";
 import webpack from "webpack";
 import webpackCompileConfig from "../webpack-compiler.config.mjs";
 
@@ -54,6 +55,7 @@ class CompileHtml {
     this.config = {
       configs: [],
       scripts: [],
+      styles: [],
       paths: {
         pathOriginal: resPath.slice(0, resPath.lastIndexOf("/")),
         pathResolve: resolvePath,
@@ -62,35 +64,41 @@ class CompileHtml {
     };
 
     this.htmlText = readFileSync(resPath).asciiSlice();
-    const sources = this.htmlText.match(/(?<=<[Ss][Cc][Rr][Ii][Pp][Tt]>)([\s\S]*?)(?=<\/[Ss][Cc][Rr][Ii][Pp][Tt]>)/g);
-    if (sources === null) {
-      return;
-    }
+    const jsSources = this.htmlText.match(/(?<=<[Ss][Cc][Rr][Ii][Pp][Tt]>)([\s\S]*?)(?=<\/[Ss][Cc][Rr][Ii][Pp][Tt]>)/g);
+    const cssSources = this.htmlText.match(/(?<=<[Ss][Tt][Yy][Ll][Ee]>)([\s\S]*?)(?=<\/[Ss][Tt][Yy][Ll][Ee]>)/g);
 
     const {
       configs,
       scripts,
+      styles,
       paths: { pathOriginal, tempFolder }
     } = this.config;
-    sources.forEach((data, i) => {
-      const tempDir = `${pathOriginal}${tempFolder}`;
-      const filename = `/script${i}.js`;
-      const filenameBundle = `script${i}-bundle.js`;
+    if (jsSources !== null) {
+      jsSources.forEach((data, i) => {
+        const tempDir = `${pathOriginal}${tempFolder}`;
+        const filename = `/script${i}.js`;
+        const filenameBundle = `script${i}-bundle.js`;
 
-      if (!existsSync(tempDir)) {
-        mkdirSync(tempDir);
-      }
-      writeFileSync(`${tempDir}${filename}`, data, "utf8");
+        if (!existsSync(tempDir)) {
+          mkdirSync(tempDir);
+        }
+        writeFileSync(`${tempDir}${filename}`, data, "utf8");
 
-      const compileOpt = {
-        mode,
-        path: tempDir,
-        entry: `${tempDir}${filename}`,
-        filename: filenameBundle
-      };
-      configs.push(webpackCompileConfig(compileOpt));
-      scripts.push({ file: `${tempDir}/${filenameBundle}`, data, idx: this.htmlText.indexOf(data) });
-    });
+        const compileOpt = {
+          mode,
+          path: tempDir,
+          entry: `${tempDir}${filename}`,
+          filename: filenameBundle
+        };
+        configs.push(webpackCompileConfig(compileOpt));
+        scripts.push({ file: `${tempDir}/${filenameBundle}`, data, idx: this.htmlText.indexOf(data) });
+      });
+    }
+    if (cssSources !== null) {
+      cssSources.forEach(data => {
+        styles.push({ data });
+      });
+    }
   }
 
   run() {
@@ -98,9 +106,11 @@ class CompileHtml {
       const {
         configs,
         scripts,
+        styles,
         paths: { pathOriginal, pathResolve, tempFolder }
       } = this.config;
       const promises = [];
+      const sassStyles = [];
 
       configs.forEach(config => {
         const compiler = webpack(config);
@@ -112,13 +122,27 @@ class CompileHtml {
           })
         );
       });
+      styles.forEach(({ data }, i) => {
+        promises.push(
+          new Promise(res => {
+            sass.render({ data }, (err, result) => {
+              sassStyles[i] = result.css.toString();
+              res();
+            });
+          })
+        );
+      });
 
       Promise.all(promises).then(() => {
         scripts.reverse().forEach(script => {
           const { file, data, idx } = script;
-
           const newdata = readFileSync(file);
           this.htmlText = this.htmlText.slice(0, idx) + newdata + this.htmlText.slice(idx + data.length);
+        });
+        styles.reverse().forEach(({ data }, i) => {
+          const idx = this.htmlText.indexOf(data);
+          this.htmlText =
+            this.htmlText.slice(0, idx) + sassStyles[styles.length - i - 1] + this.htmlText.slice(idx + data.length);
         });
         const dirName = pathResolve.slice(0, pathResolve.lastIndexOf("/"));
         if (!existsSync(dirName)) {
@@ -128,7 +152,7 @@ class CompileHtml {
 
         const tempDir = `${pathOriginal}${tempFolder}`;
         if (existsSync(tempDir)) {
-          readdirSync(tempDir).forEach(function(file) {
+          readdirSync(tempDir).forEach(file => {
             unlinkSync(`${tempDir}/${file}`);
           });
           rmdirSync(tempDir);
