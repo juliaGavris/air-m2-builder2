@@ -1,7 +1,7 @@
 import { existsSync, readFileSync, writeFileSync, readdirSync, mkdirSync, rmdirSync, unlinkSync } from "fs";
-import sass from "dart-sass";
 import webpack from "webpack";
 import webpackCompileConfig from "../webpack-compiler.config.mjs";
+import CompileSass from "./compileSass";
 
 class CompileResource {
   run() {
@@ -52,10 +52,14 @@ class CompileHtml {
       resolvePath,
       redundantPaths: { resPath }
     } = opt;
+
+    this.htmlText = readFileSync(resPath).asciiSlice();
+    const jsSources = this.htmlText.match(/(?<=<[Ss][Cc][Rr][Ii][Pp][Tt]>)([\s\S]*?)(?=<\/[Ss][Cc][Rr][Ii][Pp][Tt]>)/g);
+
     this.config = {
       configs: [],
       scripts: [],
-      styles: [],
+      sass: new CompileSass({ htmlText: this.htmlText }),
       paths: {
         pathOriginal: resPath.slice(0, resPath.lastIndexOf("/")),
         pathResolve: resolvePath,
@@ -63,14 +67,9 @@ class CompileHtml {
       }
     };
 
-    this.htmlText = readFileSync(resPath).asciiSlice();
-    const jsSources = this.htmlText.match(/(?<=<[Ss][Cc][Rr][Ii][Pp][Tt]>)([\s\S]*?)(?=<\/[Ss][Cc][Rr][Ii][Pp][Tt]>)/g);
-    const cssSources = this.htmlText.match(/(?<=<[Ss][Tt][Yy][Ll][Ee]>)([\s\S]*?)(?=<\/[Ss][Tt][Yy][Ll][Ee]>)/g);
-
     const {
       configs,
       scripts,
-      styles,
       paths: { pathOriginal, tempFolder }
     } = this.config;
     if (jsSources !== null) {
@@ -94,11 +93,6 @@ class CompileHtml {
         scripts.push({ file: `${tempDir}/${filenameBundle}`, data, idx: this.htmlText.indexOf(data) });
       });
     }
-    if (cssSources !== null) {
-      cssSources.forEach(data => {
-        styles.push({ data });
-      });
-    }
   }
 
   run() {
@@ -106,11 +100,10 @@ class CompileHtml {
       const {
         configs,
         scripts,
-        styles,
+        sass,
         paths: { pathOriginal, pathResolve, tempFolder }
       } = this.config;
-      const promises = [];
-      const sassStyles = [];
+      let promises = [];
 
       configs.forEach(config => {
         const compiler = webpack(config);
@@ -122,16 +115,7 @@ class CompileHtml {
           })
         );
       });
-      styles.forEach(({ data }, i) => {
-        promises.push(
-          new Promise(res => {
-            sass.render({ data }, (err, result) => {
-              sassStyles[i] = result.css.toString();
-              res();
-            });
-          })
-        );
-      });
+      promises = promises.concat(sass.compile());
 
       Promise.all(promises).then(() => {
         scripts.reverse().forEach(script => {
@@ -139,10 +123,11 @@ class CompileHtml {
           const newdata = readFileSync(file);
           this.htmlText = this.htmlText.slice(0, idx) + newdata + this.htmlText.slice(idx + data.length);
         });
-        styles.reverse().forEach(({ data }, i) => {
+        const { scss, css } = sass;
+        scss.reverse().forEach((data, i) => {
           const idx = this.htmlText.indexOf(data);
           this.htmlText =
-            this.htmlText.slice(0, idx) + sassStyles[styles.length - i - 1] + this.htmlText.slice(idx + data.length);
+            this.htmlText.slice(0, idx) + css[scss.length - i - 1] + this.htmlText.slice(idx + data.length);
         });
         const dirName = pathResolve.slice(0, pathResolve.lastIndexOf("/"));
         if (!existsSync(dirName)) {
