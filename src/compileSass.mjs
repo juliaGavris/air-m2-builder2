@@ -12,7 +12,11 @@ export default class CompileSass {
       promises.push(
         new Promise(res => {
           sass.render({ data }, (err, result) => {
-            this.css[i] = result.css.toString();
+            if (err) {
+              console.log(`Sass compile error:\n${err}`);
+            }
+
+            this.css[i] = err ? this.scss[i] : result.css.toString();
             res();
           });
         })
