@@ -41,11 +41,15 @@ export default function serverConfig(options = {}) {
   const mode = buildMode === "prod" ? "production" : "development";
   let port = PORT;
   let master = null;
+  const latency = [];
   if (existsSync(gameConfigPath)) {
     const json = JSON.parse(readFileSync(gameConfigPath, "utf8"));
     port = json.port || port;
     if (json.hasOwnProperty("master")) {
       master = json.master;
+    }
+    if (json.hasOwnProperty("latency") && json.latency instanceof Array) {
+      latency.push(...json.latency);
     }
   }
 
@@ -102,6 +106,7 @@ export default function serverConfig(options = {}) {
     masterPath,
     units,
     optional,
+    latency,
     build: toBuild,
     execute: options.execute
   };
