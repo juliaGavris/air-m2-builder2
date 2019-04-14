@@ -37,7 +37,7 @@ export default class DevServer {
   }
 
   run() {
-    const { dirname, master, units, currentName, optional, port, execute } = this.options;
+    const { dirname, master, units, currentName, optional, latency, port, execute } = this.options;
 
     const app = new App({ execute });
 
@@ -50,7 +50,7 @@ export default class DevServer {
       hot: true,
       inline: true,
       watchContentBase: true,
-      after: after({ dirname, currentName, units, optional, app })
+      after: after({ dirname, currentName, units, optional, app, latency })
     });
 
     server.listen(port, "0.0.0.0", err => {

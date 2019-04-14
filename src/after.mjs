@@ -1,20 +1,72 @@
+import { readFileSync } from "fs";
 import Request from "./request";
+import CompileSass from "./compileSass";
+import { Utils } from "./utils";
 
-export default function after({ dirname, currentName, units, optional, app: { requester, installer }, execute }) {
+export default function after({
+  dirname,
+  currentName,
+  units,
+  optional,
+  latency,
+  app: { requester, installer },
+  execute
+}) {
   return function(app) {
-    app.get(`/${units.dirS}/`, (req, res) => {
-      res.sendFile(dirname + req.originalUrl);
-    });
     app.get(`/${units.dirS}/*`, (req, res) => {
+      function sendResolve({ source, method, delay }) {
+        if (delay === 0) {
+          if (method === "data") {
+            res.send(source);
+          } else if (method === "file") {
+            res.sendFile(source);
+          }
+        } else {
+          if (method === "data") {
+            setTimeout(() => {
+              res.send(source);
+            }, delay);
+          } else if (method === "file") {
+            setTimeout(() => {
+              res.sendFile(source);
+            }, delay);
+          }
+        }
+      }
+
       const request = new Request({ req, dirname, units, currentName, optional, execute, mode: "dev" });
+      const filePath = `${dirname}/src/${request.fileName}`;
+
+      let i = 0;
+      let match = null;
+      let delay = 0;
+      while (match === null && i < latency.length) {
+        match = filePath.match(new RegExp(latency[i++].regex));
+      }
+      if (match !== null) {
+        delay = latency[i - 1].delay || 0;
+      }
 
       if (request.mode === "currentModule") {
-        res.sendFile(`${dirname}/src/${request.fileName}`);
+        if (new Utils().getExtension(request.fileName) === ".html") {
+          let htmlText = readFileSync(filePath).asciiSlice();
+          const sass = new CompileSass({ htmlText });
+          Promise.all(sass.compile()).then(() => {
+            const { scss, css } = sass;
+            scss.reverse().forEach((data, i) => {
+              const idx = htmlText.indexOf(data);
+              htmlText = htmlText.slice(0, idx) + css[scss.length - i - 1] + htmlText.slice(idx + data.length);
+            });
+            sendResolve({ source: htmlText, method: "data", delay });
+          });
+        } else {
+          sendResolve({ source: filePath, method: "file", delay });
+        }
         return;
       }
       if (request.error) {
         console.log(request.error);
-        res.send(request.error);
+        sendResolve({ source: request.error, method: "data", delay });
         return;
       }
 
@@ -23,11 +75,11 @@ export default function after({ dirname, currentName, units, optional, app: { re
       requester
         .get(opt)
         .then(() => {
-          return res.sendFile(opt.resolvePath);
+          return sendResolve({ source: opt.resolvePath, method: "file", delay });
         })
         .catch(error => {
           installer.deleteInstance(opt.module);
-          res.send(error);
+          sendResolve({ source: error, method: "data", delay });
         });
     });
   };
