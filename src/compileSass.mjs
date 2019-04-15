@@ -2,7 +2,10 @@ import sass from "dart-sass";
 
 export default class CompileSass {
   constructor({ htmlText }) {
-    this.scss = htmlText.match(/(?<=<[Ss][Tt][Yy][Ll][Ee]>)([\s\S]*?)(?=<\/[Ss][Tt][Yy][Ll][Ee]>)/g) || [];
+    this.scss =
+      htmlText.match(
+        /(?<=<[Ss][Tt][Yy][Ll][Ee]\s*type\s*=\s*["']?\s*text\/scss\s*["']?\s*>)([\s\S]*?)(?=<\/[Ss][Tt][Yy][Ll][Ee]>)/g
+      ) || [];
     this.css = [];
   }
 
