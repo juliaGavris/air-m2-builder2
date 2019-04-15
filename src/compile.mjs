@@ -53,7 +53,7 @@ class CompileHtml {
       redundantPaths: { resPath }
     } = opt;
 
-    this.htmlText = readFileSync(resPath).asciiSlice();
+    this.htmlText = readFileSync(resPath, "utf8");
     const jsSources = this.htmlText.match(/(?<=<[Ss][Cc][Rr][Ii][Pp][Tt]>)([\s\S]*?)(?=<\/[Ss][Cc][Rr][Ii][Pp][Tt]>)/g);
 
     this.config = {
@@ -120,7 +120,7 @@ class CompileHtml {
       Promise.all(promises).then(() => {
         scripts.reverse().forEach(script => {
           const { file, data, idx } = script;
-          const newdata = readFileSync(file);
+          const newdata = readFileSync(file, "utf8");
           this.htmlText = this.htmlText.slice(0, idx) + newdata + this.htmlText.slice(idx + data.length);
         });
         const { scss, css } = sass;
@@ -133,7 +133,7 @@ class CompileHtml {
         if (!existsSync(dirName)) {
           mkdirSync(dirName, { recursive: true });
         }
-        writeFileSync(pathResolve, this.htmlText, "utf8");
+        writeFileSync(pathResolve, this.htmlText.replace(/text\/scss/g, "text/css"), "utf8");
 
         const tempDir = `${pathOriginal}${tempFolder}`;
         if (existsSync(tempDir)) {

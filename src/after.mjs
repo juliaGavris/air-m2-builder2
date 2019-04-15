@@ -49,7 +49,7 @@ export default function after({
 
       if (request.mode === "currentModule") {
         if (new Utils().getExtension(request.fileName) === ".html") {
-          let htmlText = readFileSync(filePath).asciiSlice();
+          let htmlText = readFileSync(filePath, "utf8");
           const sass = new CompileSass({ htmlText });
           Promise.all(sass.compile()).then(() => {
             const { scss, css } = sass;
@@ -57,7 +57,7 @@ export default function after({
               const idx = htmlText.indexOf(data);
               htmlText = htmlText.slice(0, idx) + css[scss.length - i - 1] + htmlText.slice(idx + data.length);
             });
-            sendResolve({ source: htmlText, method: "data", delay });
+            sendResolve({ source: htmlText.replace(/text\/scss/g, "text/css"), method: "data", delay });
           });
         } else {
           sendResolve({ source: filePath, method: "file", delay });
