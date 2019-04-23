@@ -31,6 +31,7 @@
 
 ```json
 {
+  "entry-unit": "master", //main m2 script data-arg
   "port": 9000,
   "master": "master-module",
   "latency": [{ "regex": "index\\.html", "delay": 1000 }]
