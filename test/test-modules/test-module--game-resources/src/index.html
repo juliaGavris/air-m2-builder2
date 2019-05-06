@@ -5,6 +5,11 @@
     <title>Build HTML Scripts with webpack and Styles with SASS</title>
   </head>
   <body>
+    <unit>
+      <stream-source>
+        const i = 5; const result = ++i + ++i;
+      </stream-source>
+    </unit>
     <unit id="unit0">
       <style type="text/scss">
         $colors: (red, green, blue);
@@ -57,11 +62,9 @@
           }
         }
       </style>
-      <script>
-        import { readFileSync } from "fs";
-
-        console.log(readFileSync("C:\\Temp\\testix-test-read-file.txt"));
-      </script>
+      <view-source>
+        import { readFileSync } from "fs"; console.log(readFileSync("C:\\Temp\\testix-test-read-file.txt"));
+      </view-source>
     </unit>
   </body>
 </html>
