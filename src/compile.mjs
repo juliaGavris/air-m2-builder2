@@ -72,12 +72,13 @@ class CompileHtml {
       "(?<=<[Ss][Tt][Rr][Ee][Aa][Mm]-[Ss][Oo][Uu][Rr][Cc][Ee]>)([\\s\\S]*?)(?=<\\/[Ss][Tt][Rr][Ee][Aa][Mm]-[Ss][Oo][Uu][Rr][Cc][Ee]>)"
     );
 
+    const croppedPath = resPath.slice(0, resPath.lastIndexOf("/"));
     this.config = {
       configs: [],
       scripts: [],
-      sass: new CompileSass({ htmlText: this.htmlText }),
+      sass: new CompileSass({ htmlText: this.htmlText, filePath: croppedPath }),
       paths: {
-        pathOriginal: resPath.slice(0, resPath.lastIndexOf("/")),
+        pathOriginal: croppedPath,
         pathResolve: resolvePath,
         tempFolder: "/$temp"
       }

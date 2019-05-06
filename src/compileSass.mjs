@@ -1,11 +1,16 @@
 import sass from "dart-sass";
+import path from "path";
 
 export default class CompileSass {
-  constructor({ htmlText }) {
-    this.scss =
+  constructor({ htmlText, filePath }) {
+    this.scss = (
       htmlText.match(
         /(?<=<[Ss][Tt][Yy][Ll][Ee]\s*type\s*=\s*["']?\s*text\/scss\s*["']?\s*>)([\s\S]*?)(?=<\/[Ss][Tt][Yy][Ll][Ee]>)/g
-      ) || [];
+      ) || []
+    ).reduce((acc, style) => {
+      acc.push(style.replace(/(?<=@import ["'])(\S+)(?=["'];)/g, match => path.resolve(filePath, match)));
+      return acc;
+    }, []);
     this.css = [];
   }
 

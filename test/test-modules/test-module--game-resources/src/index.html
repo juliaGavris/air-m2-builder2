@@ -12,11 +12,7 @@
     </unit>
     <unit id="unit0">
       <style type="text/scss">
-        $colors: (red, green, blue);
-        $sizes: (
-          big: 100,
-          small: 50
-        );
+        @import "./data";
 
         @each $color in $colors {
           .#{"" + $color} {
