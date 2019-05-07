@@ -58,18 +58,18 @@ class CompileHtml {
     const jsSources = ((text, ...regexp) => {
       const js = [];
       regexp.forEach(reg => {
-        const match = text.match(new RegExp(reg, "g"));
+        const match = text.match(new RegExp(reg, "gi"));
         if (match !== null) {
-          js.push(match);
+          js.push(match[0]);
         }
       });
 
       return js;
     })(
       this.htmlText,
-      "(?<=<[Ss][Cc][Rr][Ii][Pp][Tt]>)([\\s\\S]*?)(?=<\\/[Ss][Cc][Rr][Ii][Pp][Tt]>)",
-      "(?<=<[Vv][Ii][Ee][Ww]-[Ss][Oo][Uu][Rr][Cc][Ee]>)([\\s\\S]*?)(?=<\\/[Vv][Ii][Ee][Ww]-[Ss][Oo][Uu][Rr][Cc][Ee]>)",
-      "(?<=<[Ss][Tt][Rr][Ee][Aa][Mm]-[Ss][Oo][Uu][Rr][Cc][Ee]>)([\\s\\S]*?)(?=<\\/[Ss][Tt][Rr][Ee][Aa][Mm]-[Ss][Oo][Uu][Rr][Cc][Ee]>)"
+      "(?<=<script>)([\\s\\S]*?)(?=<\\/script>)",
+      "(?<=<view-source>)([\\s\\S]*?)(?=<\\/view-source>)",
+      "(?<=<stream-source>)([\\s\\S]*?)(?=<\\/stream-source>)"
     );
 
     const croppedPath = resPath.slice(0, resPath.lastIndexOf("/"));
@@ -107,7 +107,7 @@ class CompileHtml {
           filename: filenameBundle
         };
         configs.push(webpackCompileConfig(compileOpt));
-        scripts.push({ file: `${tempDir}/${filenameBundle}`, data, idx: this.htmlText.indexOf(data) });
+        scripts.push({ file: `${tempDir}/${filenameBundle}`, idx: this.htmlText.indexOf(data), len: data.length });
       });
     }
   }
@@ -135,18 +135,19 @@ class CompileHtml {
       promises = promises.concat(sass.compile());
 
       Promise.all(promises).then(() => {
-        scripts
-          .sort((a, b) => b.idx - a.idx)
-          .forEach(({ file, data, idx }) => {
-            const newdata = readFileSync(file, "utf8");
-            this.htmlText = this.htmlText.slice(0, idx) + newdata + this.htmlText.slice(idx + data[0].length);
-          });
         const { scss, css } = sass;
-        scss.reverse().forEach((data, i) => {
-          const idx = this.htmlText.indexOf(data);
-          this.htmlText =
-            this.htmlText.slice(0, idx) + css[scss.length - i - 1] + this.htmlText.slice(idx + data.length);
-        });
+        Array.prototype
+          .concat(scripts, scss)
+          .sort((a, b) => b.idx - a.idx)
+          .forEach(({ file, cssIndex, idx, len }) => {
+            let newdata;
+            if (file) {
+              newdata = readFileSync(file, "utf8");
+            } else {
+              newdata = css[cssIndex];
+            }
+            this.htmlText = this.htmlText.slice(0, idx) + newdata + this.htmlText.slice(idx + len);
+          });
         const dirName = pathResolve.slice(0, pathResolve.lastIndexOf("/"));
         if (!existsSync(dirName)) {
           mkdirSync(dirName, { recursive: true });
@@ -161,7 +162,7 @@ class CompileHtml {
           rmdirSync(tempDir);
         }
 
-        resolve();
+        resolve(this.htmlText);
       });
     });
   }

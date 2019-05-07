@@ -1,6 +1,5 @@
-import { readFileSync } from "fs";
 import Request from "./request";
-import CompileSass from "./compileSass";
+import { CompileHtml } from "./compile";
 import { Utils } from "./utils";
 
 export default function after({
@@ -49,15 +48,8 @@ export default function after({
 
       if (request.mode === "currentModule") {
         if (new Utils().getExtension(request.fileName) === ".html") {
-          let htmlText = readFileSync(filePath, "utf8");
-          const sass = new CompileSass({ htmlText });
-          Promise.all(sass.compile()).then(() => {
-            const { scss, css } = sass;
-            scss.reverse().forEach((data, i) => {
-              const idx = htmlText.indexOf(data);
-              htmlText = htmlText.slice(0, idx) + css[scss.length - i - 1] + htmlText.slice(idx + data.length);
-            });
-            sendResolve({ source: htmlText.replace(/text\/scss/g, "text/css"), method: "data", delay });
+          new CompileHtml({ ...request.options, redundantPaths: { resPath: filePath } }).run().then(htmlText => {
+            sendResolve({ source: htmlText, method: "data", delay });
           });
         } else {
           sendResolve({ source: filePath, method: "file", delay });
