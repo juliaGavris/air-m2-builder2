@@ -13,6 +13,8 @@ export default function serverConfig(options = {}) {
     options.customDir = false;
   }
 
+  let entryUnit = "master";
+
   const dirname = options.customDir ? options.customDir : path.resolve(path.dirname(""));
   const currentName = dirname.match(/[-\w]+$/)[0];
   const units = { dir: "m2unit", requires: "m2units" };
@@ -45,6 +47,7 @@ export default function serverConfig(options = {}) {
   if (existsSync(gameConfigPath)) {
     const json = JSON.parse(readFileSync(gameConfigPath, "utf8"));
     port = json.port || port;
+    entryUnit = json["entry-unit"] || "master";
     if (json.hasOwnProperty("master")) {
       master = json.master;
     }
@@ -98,6 +101,7 @@ export default function serverConfig(options = {}) {
   }
 
   return {
+    entryUnit,
     port,
     mode,
     dirname,
