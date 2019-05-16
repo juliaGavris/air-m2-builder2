@@ -148,11 +148,12 @@ class CompileHtml {
             }
             this.htmlText = this.htmlText.slice(0, idx) + newdata + this.htmlText.slice(idx + len);
           });
+        this.htmlText = this.htmlText.replace(/\s*type\s*=\s*["']?\s*text\/scss\s*["']?\s*/g, "");
         const dirName = pathResolve.slice(0, pathResolve.lastIndexOf("/"));
         if (!existsSync(dirName)) {
           mkdirSync(dirName, { recursive: true });
         }
-        writeFileSync(pathResolve, this.htmlText.replace(/text\/scss/g, "text/css"), "utf8");
+        writeFileSync(pathResolve, this.htmlText, "utf8");
 
         const tempDir = `${pathOriginal}${tempFolder}`;
         if (existsSync(tempDir)) {
