@@ -17,7 +17,7 @@ export default class Request {
     const match = req.path.match(/\/?[-\w]+\//g);
     const module = match && match.length > 1 ? match[1].slice(0, -1) : currentName;
 
-    this.fileName = path.fullPath.slice(path.fullPath.indexOf(`/${module}/`) + module.length + 2);
+    this.fileName = path.fullPath.slice(path.fullPath.lastIndexOf(`/${module}/`) + module.length + 2);
     path.filePath = `${dirname}/node_modules/${module}/${units.dir}/${this.fileName}`;
     path.resPath = `${dirname}/node_modules/${module}/src/${this.fileName}`;
 
