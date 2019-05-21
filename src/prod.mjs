@@ -1,7 +1,7 @@
-import { Utils } from "./utils";
-import { CompileSource } from "./compile";
-import Install from "./install";
-import RequestOpt from "./request";
+import { Utils } from "./utils.mjs";
+import { CompileSource } from "./compile.mjs";
+import Install from "./install.mjs";
+import RequestOpt from "./request.mjs";
 
 const utils = new Utils();
 

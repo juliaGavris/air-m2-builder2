@@ -3,9 +3,9 @@ import webpack from "webpack";
 import webpackConfig from "../webpack.config.js";
 import webpackCompileConfig from "../webpack-compiler.config.mjs";
 import WebpackDevServer from "webpack-dev-server";
-import App from "../src/app";
-import BuildProd from "../src/prod";
-import after from "../src/after";
+import App from "../src/app.mjs";
+import BuildProd from "../src/prod.mjs";
+import after from "../src/after.mjs";
 
 export default class DevServer {
   constructor(options) {

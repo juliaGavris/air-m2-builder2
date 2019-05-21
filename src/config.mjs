@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from "fs";
 import path from "path";
-import { Utils } from "../src/utils";
+import { Utils } from "../src/utils.mjs";
 
 const utils = new Utils();
 

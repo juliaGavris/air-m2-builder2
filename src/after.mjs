@@ -1,6 +1,6 @@
-import Request from "./request";
-import { CompileHtml } from "./compile";
-import { Utils } from "./utils";
+import Request from "./request.mjs";
+import { CompileHtml } from "./compile.mjs";
+import { Utils } from "./utils.mjs";
 
 export default function after({
   dirname,

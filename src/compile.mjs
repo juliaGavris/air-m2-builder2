@@ -1,7 +1,7 @@
 import { existsSync, readFileSync, writeFileSync, readdirSync, mkdirSync, rmdirSync, unlinkSync } from "fs";
 import webpack from "webpack";
 import webpackCompileConfig from "../webpack-compiler.config.mjs";
-import CompileSass from "./compileSass";
+import CompileSass from "./compileSass.mjs";
 
 class CompileResource {
   run() {

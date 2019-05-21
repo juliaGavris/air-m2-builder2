@@ -1,5 +1,5 @@
 import { existsSync } from "fs";
-import postInstall from "./postinstall";
+import postInstall from "./postinstall.mjs";
 
 export default class Install {
   constructor({ execute }) {

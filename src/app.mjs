@@ -1,7 +1,7 @@
 import { access, constants } from "fs";
-import Install from "./install";
-import Cache from "./cache";
-import Repl from "./repl";
+import Install from "./install.mjs";
+import Cache from "./cache.mjs";
+import Repl from "./repl.mjs";
 
 export default class App {
   constructor({ execute }) {

@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from "fs";
-import { Utils } from "./utils";
-import { CompileSource, CompileResource, CompileHtml } from "./compile";
+import { Utils } from "./utils.mjs";
+import { CompileSource, CompileResource, CompileHtml } from "./compile.mjs";
 
 const utils = new Utils();
 

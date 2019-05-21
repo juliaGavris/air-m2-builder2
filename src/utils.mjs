@@ -2,7 +2,7 @@ import { readFileSync, readdirSync, statSync } from "fs";
 import path from "path";
 import copyfiles from "copyfiles";
 import { exec } from "child_process";
-import { CompileHtml } from "./compile";
+import { CompileHtml } from "./compile.mjs";
 
 class Utils {
   getRandomInt(max, min = 0) {
