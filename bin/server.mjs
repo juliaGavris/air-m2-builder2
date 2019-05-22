@@ -1,6 +1,6 @@
-import serverConfig from "../src/config";
-import DevServer from "../src/devserver";
-import { UtilsDev } from "../src/utils";
+import serverConfig from "../src/config.mjs";
+import DevServer from "../src/devserver.mjs";
+import { UtilsDev } from "../src/utils.mjs";
 
 const config = serverConfig({ execute: UtilsDev.execute });
 const devserver = new DevServer(config);
