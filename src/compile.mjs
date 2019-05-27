@@ -60,7 +60,7 @@ class CompileHtml {
       regexp.forEach(reg => {
         const match = text.match(new RegExp(reg, "gi"));
         if (match !== null) {
-          js.push(match[0]);
+          js.push(...match);
         }
       });
 
