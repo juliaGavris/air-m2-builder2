@@ -1,6 +1,6 @@
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 
-module.exports = function(mode, dirname, { masterPath, entryUnit } ) {
+module.exports = function(mode, dirname, { masterPath, entryUnit, revision = null } ) {
   const obj = {
     mode,
     entry: [`${__dirname}/src/m2.js`, masterPath.join("")],
@@ -17,7 +17,8 @@ module.exports = function(mode, dirname, { masterPath, entryUnit } ) {
         inject: false,
         hash: true,
         template: masterPath.join("").replace(/\.js$/g, ".html"),
-        filename: "index.html"
+        filename: "index.html",
+        revision
       })
     ]
   };

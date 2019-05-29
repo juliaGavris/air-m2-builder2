@@ -1,5 +1,6 @@
 import Request from "./request.mjs";
 import { CompileHtml } from "./compile.mjs";
+import { ProcessCss } from "./processCss.mjs";
 import { Utils } from "./utils.mjs";
 
 export default function after({
@@ -13,7 +14,10 @@ export default function after({
 }) {
   return function(app) {
     app.get(`/${units.dirS}/*`, (req, res) => {
-      function sendResolve({ source, method, delay }) {
+      function sendResolve({ source, method, delay, contentType }) {
+        if (contentType) {
+          res.header("Content-Type", contentType);
+        }
         if (delay === 0) {
           if (method === "data") {
             res.send(source);
@@ -34,7 +38,13 @@ export default function after({
       }
 
       const request = new Request({ req, dirname, units, currentName, optional, execute, mode: "dev" });
-      const filePath = `${dirname}/src/${request.fileName}`;
+
+      const utils = new Utils()
+      const fileName = utils.removeQueryString(request.fileName)
+      const queryParams = utils.getQueryParams(request.fileName)
+      const filePath = `${dirname}/src/${fileName}`
+      const opt = request.options;
+
 
       let i = 0;
       let match = null;
@@ -47,9 +57,13 @@ export default function after({
       }
 
       if (request.mode === "currentModule") {
-        if (new Utils().getExtension(request.fileName) === ".html") {
-          new CompileHtml({ ...request.options, redundantPaths: { resPath: filePath } }).run().then(htmlText => {
+        if (utils.getExtension(fileName) === ".html") {
+          new CompileHtml({ ...request.options, resolvePath: utils.removeQueryString(opt.resolvePath), redundantPaths: { resPath: filePath } }).run().then(htmlText => {
             sendResolve({ source: htmlText, method: "data", delay });
+          });
+        } else if (queryParams.revision && utils.getExtension(fileName) === ".css") {
+          new ProcessCss({ filePath, revision: queryParams.revision}).run().then(cssText => {
+            sendResolve({ source: cssText, method: "data", delay, contentType: 'text/css; charset=UTF-8' });
           });
         } else {
           sendResolve({ source: filePath, method: "file", delay });
@@ -62,12 +76,11 @@ export default function after({
         return;
       }
 
-      const opt = request.options;
 
       requester
         .get(opt)
         .then(() => {
-          return sendResolve({ source: opt.resolvePath, method: "file", delay });
+          return sendResolve({ source: utils.removeQueryString(opt.resolvePath), method: "file", delay });
         })
         .catch(error => {
           installer.deleteInstance(opt.module);

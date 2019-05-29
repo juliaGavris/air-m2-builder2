@@ -20,6 +20,15 @@ export default function serverConfig(options = {}) {
   const units = { dir: "m2unit", requires: "m2units" };
   units.dirS = `${units.dir}s`;
 
+  let revision = null;
+  for (let i = 0; i < process.argv.length; i ++) {
+    const arg = process.argv[i]
+    if (arg.indexOf('revision:') > -1) {
+      revision = arg.split(':')[1]
+      delete process.argv[i]
+    }
+  }
+
   let buildMode = null;
   let toBuild = false;
   if (process.argv[2] === undefined) {
@@ -112,6 +121,7 @@ export default function serverConfig(options = {}) {
     optional,
     latency,
     build: toBuild,
-    execute: options.execute
+    execute: options.execute,
+    revision
   };
 }
