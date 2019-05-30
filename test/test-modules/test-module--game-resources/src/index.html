@@ -6,8 +6,10 @@
   </head>
   <body>
     <unit>
+      <!-- prettier-ignore -->
       <stream-source>
-        const i = 5; const result = ++i + ++i;
+        let i = 5;
+        const result = ++i + ++i;
       </stream-source>
     </unit>
     <unit id="unit0">
@@ -57,9 +59,18 @@
             }
           }
         }
+
+        .example {
+          display: grid;
+          transition: all 0.5s;
+          user-select: none;
+          background: linear-gradient(to bottom, white, black);
+        }
       </style>
+      <!-- prettier-ignore -->
       <view-source>
-        import { readFileSync } from "fs"; console.log(readFileSync("C:\\Temp\\testix-test-read-file.txt"));
+        import { readFileSync } from "fs";
+        console.log(readFileSync("C:\\Temp\\testix-test-read-file.txt"));
       </view-source>
     </unit>
   </body>

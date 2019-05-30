@@ -32,7 +32,7 @@ describe("Units", () => {
         res.text.indexOf("@mixin").should.be.equal(-1);
         res.text.indexOf("@each").should.be.equal(-1);
         res.text.indexOf("text/scss").should.be.equal(-1);
-        res.text.indexOf("text/css").should.be.greaterThan(-1);
+        res.text.indexOf("-webkit-user-select").should.be.greaterThan(-1);
         done();
       });
   });
