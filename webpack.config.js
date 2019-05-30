@@ -18,7 +18,12 @@ module.exports = function(mode, dirname, { masterPath, entryUnit, revision = nul
         hash: true,
         template: masterPath.join("").replace(/\.js$/g, ".html"),
         filename: "index.html",
-        revision
+        revision,
+        minify: {
+          removeEmptyAttributes: function(attrName, tag) {
+            return tag === 'script' && attrName === 'revision'
+          }
+        }
       })
     ]
   };
