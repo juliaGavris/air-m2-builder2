@@ -53,17 +53,6 @@ class Utils {
     return match ? match[0] : null;
   }
 
-  getQueryParams(str) {
-    let params = []
-    const queryString = str.substring( str.indexOf('?') + 1 )
-    const queries = queryString.split('&')
-    queries.forEach((q, i) => {
-      const t = q.split('=')
-      params[t[0]] = t[1]
-    })
-    return params
-  }
-
   removeQueryString(str) {
     return str.indexOf('?') > -1 ? str.substring( 0, str.indexOf('?') ) : str
   }

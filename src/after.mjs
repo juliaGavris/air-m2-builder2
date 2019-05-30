@@ -1,6 +1,5 @@
 import Request from "./request.mjs";
 import { CompileHtml } from "./compile.mjs";
-import { ProcessCss } from "./processCss.mjs";
 import { Utils } from "./utils.mjs";
 
 export default function after({
@@ -14,10 +13,7 @@ export default function after({
 }) {
   return function(app) {
     app.get(`/${units.dirS}/*`, (req, res) => {
-      function sendResolve({ source, method, delay, contentType }) {
-        if (contentType) {
-          res.header("Content-Type", contentType);
-        }
+      function sendResolve({ source, method, delay }) {
         if (delay === 0) {
           if (method === "data") {
             res.send(source);
@@ -41,7 +37,6 @@ export default function after({
 
       const utils = new Utils()
       const fileName = utils.removeQueryString(request.fileName)
-      const queryParams = utils.getQueryParams(request.fileName)
       const filePath = `${dirname}/src/${fileName}`
       const opt = request.options;
 
@@ -60,10 +55,6 @@ export default function after({
         if (utils.getExtension(fileName) === ".html") {
           new CompileHtml({ ...request.options, resolvePath: utils.removeQueryString(opt.resolvePath), redundantPaths: { resPath: filePath } }).run().then(htmlText => {
             sendResolve({ source: htmlText, method: "data", delay });
-          });
-        } else if (queryParams.revision && utils.getExtension(fileName) === ".css") {
-          new ProcessCss({ filePath, revision: queryParams.revision}).run().then(cssText => {
-            sendResolve({ source: cssText, method: "data", delay, contentType: 'text/css; charset=UTF-8' });
           });
         } else {
           sendResolve({ source: filePath, method: "file", delay });
