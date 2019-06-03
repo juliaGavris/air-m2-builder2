@@ -53,6 +53,10 @@ class Utils {
     return match ? match[0] : null;
   }
 
+  removeQueryString(str) {
+    return str.indexOf('?') > -1 ? str.substring( 0, str.indexOf('?') ) : str
+  }
+
   getAllFiles(dir, extensions = [], includes = true, filelist = []) {
     const files = readdirSync(dir);
     files.forEach(file => {
