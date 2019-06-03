@@ -1,5 +1,7 @@
 import sass from "dart-sass";
 import path from "path";
+import postcss from "postcss";
+import autoprefixer from "autoprefixer";
 
 export default class CompileSass {
   constructor({ htmlText, filePath }) {
@@ -27,10 +29,16 @@ export default class CompileSass {
           sass.render({ data }, (err, result) => {
             if (err) {
               console.log(`Sass compile error:\n${err}`);
+              this.css[i] = this.scss[i];
+              res();
+            } else {
+              postcss([autoprefixer])
+                .process(result.css.toString(), { from: undefined })
+                .then(result => {
+                  this.css[i] = result.css;
+                  res();
+                });
             }
-
-            this.css[i] = err ? this.scss[i] : result.css.toString();
-            res();
           });
         })
       );
