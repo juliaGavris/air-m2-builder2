@@ -33,6 +33,12 @@ describe("Units", () => {
         res.text.indexOf("@each").should.be.equal(-1);
         res.text.indexOf("text/scss").should.be.equal(-1);
         res.text.indexOf("-webkit-user-select").should.be.greaterThan(-1);
+        res.text.indexOf("<view-source>").should.be.equal(-1);
+        res.text.indexOf("</view-source>").should.be.equal(-1);
+        res.text.indexOf("<stream-source>").should.be.equal(-1);
+        res.text.indexOf("</stream-source>").should.be.equal(-1);
+        res.text.indexOf('<script data-source-type="view-source">').should.be.greaterThan(-1);
+        res.text.indexOf('<script data-source-type="stream-source">').should.be.greaterThan(-1);
         done();
       });
   });
