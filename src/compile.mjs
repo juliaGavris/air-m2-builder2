@@ -148,7 +148,12 @@ class CompileHtml {
             }
             this.htmlText = this.htmlText.slice(0, idx) + newdata + this.htmlText.slice(idx + len);
           });
-        this.htmlText = this.htmlText.replace(/\s*type\s*=\s*["']?\s*text\/scss\s*["']?\s*/g, "");
+        this.htmlText = this.htmlText
+          .replace(/\s*type\s*=\s*["']?\s*text\/scss\s*["']?\s*/g, "")
+          .replace(/<view-source>/gi, '<script data-source-type="view-source">')
+          .replace(/<\/view-source>/gi, "</script>")
+          .replace(/<stream-source>/gi, '<script data-source-type="stream-source">')
+          .replace(/<\/stream-source>/gi, "</script>");
         const dirName = pathResolve.slice(0, pathResolve.lastIndexOf("/"));
         if (!existsSync(dirName)) {
           mkdirSync(dirName, { recursive: true });
