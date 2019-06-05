@@ -29,6 +29,10 @@ export default function serverConfig(options = {}) {
     }
   }
 
+  if(process.env.hasOwnProperty("STATIC_VERSION")) {
+    revision = process.env.STATIC_VERSION;
+  }
+
   let buildMode = null;
   let toBuild = false;
   if (process.argv[2] === undefined) {
