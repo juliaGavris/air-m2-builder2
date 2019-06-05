@@ -60,3 +60,9 @@
   }
 </style>
 ```
+
+### supported env's vars
+STATIC_VERSION
+
+### supported local's vars
+--revision:<build-number>
