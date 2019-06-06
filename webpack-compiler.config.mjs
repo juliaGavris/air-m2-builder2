@@ -1,6 +1,16 @@
 export default ({ entry, path, filename, mode = "development" }) => {
+
+  let webpackBuildMode = mode;
+
+  if(process.argv.includes("--mode=development")) {
+    webpackBuildMode = "development";
+  }
+  else if(process.argv.includes("--mode=production")) {
+    webpackBuildMode = "production";
+  }
+
   const obj = {
-    mode,
+    mode: webpackBuildMode,
     entry,
     externals: { m2: "__M2" },
     output: {

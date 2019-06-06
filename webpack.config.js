@@ -1,8 +1,18 @@
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 
 module.exports = function(mode, dirname, { masterPath, entryUnit, revision = null } ) {
+
+  let webpackBuildMode = mode;
+
+  if(process.argv.includes("--mode=development")) {
+    webpackBuildMode = "development";
+  }
+  else if(process.argv.includes("--mode=production")) {
+    webpackBuildMode = "production";
+  }
+
   const obj = {
-    mode,
+    mode: webpackBuildMode,
     entry: [`${__dirname}/src/m2.js`, masterPath.join("")],
     externals: {
       m2: "__M2"
