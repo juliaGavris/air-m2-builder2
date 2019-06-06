@@ -19,6 +19,14 @@ export default ({ entry, path, filename, mode = "development" }) => {
           use: {
             loader: "babel-loader",
             options: {
+              plugins: [
+                [
+                  "@babel/plugin-transform-runtime",
+                  {
+                    "regenerator": true,
+                  }
+                ]
+              ],
               presets: [
                 [
                   "@babel/preset-env",

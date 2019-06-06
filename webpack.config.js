@@ -36,6 +36,14 @@ module.exports = function(mode, dirname, { masterPath, entryUnit, revision = nul
           use: {
             loader: "babel-loader",
             options: {
+              plugins: [
+                [
+                  "@babel/plugin-transform-runtime",
+                  {
+                    "regenerator": true,
+                  }
+                ]
+              ],
               presets: [
                 [
                   "@babel/preset-env",
