@@ -11,7 +11,7 @@ export default ({ entry, path, filename, mode = "development" }) => {
     }
   };
 
-  if (mode === "production") {
+  /*if (mode === "production") {
     obj.module = {
       rules: [
         {
@@ -42,7 +42,7 @@ export default ({ entry, path, filename, mode = "development" }) => {
         }
       ]
     };
-  }
+  }*/
 
   return obj;
 };

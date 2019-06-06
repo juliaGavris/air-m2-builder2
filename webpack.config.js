@@ -28,7 +28,7 @@ module.exports = function(mode, dirname, { masterPath, entryUnit, revision = nul
     ]
   };
 
-  if (mode === "production") {
+  /*if (mode === "production") {
     obj.module = {
       rules: [
         {
@@ -59,7 +59,7 @@ module.exports = function(mode, dirname, { masterPath, entryUnit, revision = nul
         }
       ]
     };
-  }
+  }*/
 
   return obj;
 };
