@@ -11,8 +11,8 @@
 ```json
 {
   "scripts": {
-    "build": "node --experimental-modules ./node_modules/air-m2-builder2/bin/server.mjs --build:prod",
-    "dev": "node --experimental-modules ./node_modules/air-m2-builder2/bin/server.mjs"
+    "build": "node --experimental-modules ./node_modules/air-m2-builder2/bin/server.mjs",
+    "dev": "node --experimental-modules ./node_modules/air-m2-builder2/bin/server.mjs --dev-server"
   }
 }
 ```
@@ -20,6 +20,12 @@
 ### Запуск
 
 `npm run dev`
+
+#### Параметры запуска
+
+- без параметров или `--dev-server:false` - запуск сборки
+- `--dev-server` или `--dev-server:true` - запуск отладочного сервера
+- `--build-mode:[production|development]` - режим сборки скриптов webpack
 
 ### Командная строка
 
@@ -61,8 +67,8 @@
 </style>
 ```
 
-### supported env's vars
+## Supported env's vars
 STATIC_VERSION
 
-### supported local's vars
+## Supported local's vars
 --revision:<build-number>

@@ -20,7 +20,7 @@ export default class Install {
   }
 
   install(opt) {
-    if (opt.force || !existsSync(opt.dirname + `/node_modules/${opt.module}`)) {
+    if (!opt.devServer || !existsSync(opt.dirname + `/node_modules/${opt.module}`)) {
       return this.pushRequest(opt);
     } else {
       return new Promise(res => {

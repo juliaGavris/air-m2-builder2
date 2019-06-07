@@ -16,7 +16,7 @@ class CompileSource {
     this.opt = opt;
 
     const compileOpt = {
-      mode: this.opt.mode,
+      buildMode: this.opt.buildMode,
       path,
       entry,
       filename: "index.js"
@@ -48,7 +48,7 @@ class CompileSource {
 class CompileHtml {
   constructor(opt) {
     const {
-      mode,
+      buildMode,
       resolvePath,
       redundantPaths: { resPath }
     } = opt;
@@ -101,7 +101,7 @@ class CompileHtml {
         writeFileSync(`${tempDir}${filename}`, data, "utf8");
 
         const compileOpt = {
-          mode,
+          buildMode,
           path: tempDir,
           entry: `${tempDir}${filename}`,
           filename: filenameBundle

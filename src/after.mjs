@@ -9,7 +9,9 @@ export default function after({
   optional,
   latency,
   app: { requester, installer },
-  execute
+  execute,
+  devServer,
+  buildMode
 }) {
   return function(app) {
     app.get(`/${units.dirS}/*`, (req, res) => {
@@ -33,13 +35,12 @@ export default function after({
         }
       }
 
-      const request = new Request({ req, dirname, units, currentName, optional, execute, mode: "dev" });
+      const request = new Request({ req, dirname, units, currentName, optional, execute, buildMode, devServer });
 
-      const utils = new Utils()
-      const fileName = utils.removeQueryString(request.fileName)
-      const filePath = `${dirname}/src/${fileName}`
+      const utils = new Utils();
+      const fileName = utils.removeQueryString(request.fileName);
+      const filePath = `${dirname}/src/${fileName}`;
       const opt = request.options;
-
 
       let i = 0;
       let match = null;
@@ -53,9 +54,15 @@ export default function after({
 
       if (request.mode === "currentModule") {
         if (utils.getExtension(fileName) === ".html") {
-          new CompileHtml({ ...request.options, resolvePath: utils.removeQueryString(opt.resolvePath), redundantPaths: { resPath: filePath } }).run().then(htmlText => {
-            sendResolve({ source: htmlText, method: "data", delay });
-          });
+          new CompileHtml({
+            ...request.options,
+            resolvePath: utils.removeQueryString(opt.resolvePath),
+            redundantPaths: { resPath: filePath }
+          })
+            .run()
+            .then(htmlText => {
+              sendResolve({ source: htmlText, method: "data", delay });
+            });
         } else {
           sendResolve({ source: filePath, method: "file", delay });
         }
@@ -66,7 +73,6 @@ export default function after({
         sendResolve({ source: request.error, method: "data", delay });
         return;
       }
-
 
       requester
         .get(opt)

@@ -7,6 +7,8 @@ const utils = new Utils();
 const PORT = 9000;
 const BUILDER_NAME = "air-m2-builder2";
 const PKG_REQUIRED_BY = "_requiredBy";
+let buildMode = null;
+let devServer = false;
 
 export default function serverConfig(options = {}) {
   if (!options.hasOwnProperty("customDir")) {
@@ -21,39 +23,39 @@ export default function serverConfig(options = {}) {
   units.dirS = `${units.dir}s`;
 
   let revision = null;
-  for (let i = 0; i < process.argv.length; i ++) {
-    const arg = process.argv[i]
-    if (arg.indexOf('revision:') > -1) {
-      revision = arg.split(':')[1]
-      delete process.argv[i]
-    }
-  }
-
-  if(process.env.hasOwnProperty("STATIC_VERSION")) {
-    revision = process.env.STATIC_VERSION;
-  }
-
-  let buildMode = null;
-  let toBuild = false;
-  if (process.argv[2] === undefined) {
-    buildMode = "dev";
-  } else {
-    const buildArgs = process.argv[2].split(":");
-
-    if (buildArgs[0] === "--build") {
-      buildMode = buildArgs[1];
-      if (!["prod", "dev"].includes(buildMode)) {
-        throw `Error: Unknown startup parameter '${buildMode}'. Only 'prod' and 'dev' accepted.`;
+  for (let i = 0; i < process.argv.length; i++) {
+    const arg = process.argv[i];
+    if (arg.indexOf("revision:") > -1) {
+      revision = arg.split(":")[1];
+      delete process.argv[i];
+    } else if (arg.match(/^--build-mode\b/) !== null) {
+      const mode = arg.split(":")[1];
+      if (!["production", "development"].includes(mode)) {
+        throw `Error: Unknown '--build-mode' parameter '${mode}'. Only 'production' and 'development' accepted.`;
       }
-      toBuild = true;
-    } else {
-      throw `Error: Unknown argument '${buildArgs[0]}'. Accepted only: '--build:mode'`;
+      buildMode = mode;
+    } else if (arg.match(/^--dev-server\b/) !== null) {
+      const dev = arg.split(":")[1];
+      if (dev === undefined) {
+        devServer = true;
+      } else if (!["true", "false"].includes(dev)) {
+        throw `Error: Unknown '--build-mode' parameter '${dev}'. Only 'true' and 'false' accepted.`;
+      } else {
+        devServer = JSON.parse(dev);
+      }
     }
+  }
+
+  if (buildMode === null) {
+    buildMode = devServer ? "development" : "production";
+  }
+
+  if (process.env.hasOwnProperty("STATIC_VERSION")) {
+    revision = process.env.STATIC_VERSION;
   }
 
   const gameConfigFilename = "air-m2.config.json";
   const gameConfigPath = `${dirname}/${gameConfigFilename}`;
-  const mode = buildMode === "prod" ? "production" : "development";
   let port = PORT;
   let master = null;
   const latency = [];
@@ -116,7 +118,8 @@ export default function serverConfig(options = {}) {
   return {
     entryUnit,
     port,
-    mode,
+    buildMode,
+    devServer,
     dirname,
     currentName,
     master,
@@ -124,7 +127,6 @@ export default function serverConfig(options = {}) {
     units,
     optional,
     latency,
-    build: toBuild,
     execute: options.execute,
     revision
   };

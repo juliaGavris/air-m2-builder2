@@ -25,13 +25,13 @@ export default class BuildProd {
   }
 
   bundle(value) {
-    const { dirname, currentName, units, optional } = this.opt;
+    const { dirname, currentName, units, optional, buildMode, devServer } = this.opt;
     const { module } = value;
     const req = {
       originalUrl: `/m2units/${module}/index.js`,
       path: `/m2units/${module}/index.js`
     };
-    const request = new RequestOpt({ req, dirname, units, currentName, optional, mode: "prod" });
+    const request = new RequestOpt({ req, dirname, units, currentName, optional, buildMode, devServer });
 
     if (request.error) {
       console.log(request.error);
@@ -41,7 +41,8 @@ export default class BuildProd {
         .prodCopyCompile({
           module: currentName,
           from: `${dirname}/src/**/*`,
-          to: `${dirname}/dist/${units.dirS}/${currentName}`
+          to: `${dirname}/dist/${units.dirS}/${currentName}`,
+          buildMode
         })
         .then(() => {
           const opt = request.options;
@@ -58,7 +59,8 @@ export default class BuildProd {
           .prodCopyCompile({
             module: opt.module,
             from: `${dirname}/node_modules/${opt.module}/src/**/*`,
-            to: `${dirname}/dist/${units.dirS}/${opt.module}`
+            to: `${dirname}/dist/${units.dirS}/${opt.module}`,
+            buildMode
           })
           .then(() => {
             this.next();
