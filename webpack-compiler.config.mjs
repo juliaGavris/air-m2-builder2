@@ -11,7 +11,7 @@ export default ({ entry, path, filename, buildMode }) => {
     }
   };
 
-  /*if (mode === "production") {
+  if (buildMode === "production") {
     obj.module = {
       rules: [
         {
@@ -19,14 +19,6 @@ export default ({ entry, path, filename, buildMode }) => {
           use: {
             loader: "babel-loader",
             options: {
-              plugins: [
-                [
-                  "@babel/plugin-transform-runtime",
-                  {
-                    "regenerator": true,
-                  }
-                ]
-              ],
               presets: [
                 [
                   "@babel/preset-env",
@@ -42,7 +34,7 @@ export default ({ entry, path, filename, buildMode }) => {
         }
       ]
     };
-  }*/
+  }
 
   return obj;
 };

@@ -28,7 +28,8 @@ module.exports = (buildMode, devServer, dirname, { masterPath, entryUnit, revisi
     ]
   };
 
-  /*if (mode === "production") {
+  if (buildMode === "production") {
+    obj.entry.push(`${__dirname}/src/babel-polyfill.js`);
     obj.module = {
       rules: [
         {
@@ -36,14 +37,6 @@ module.exports = (buildMode, devServer, dirname, { masterPath, entryUnit, revisi
           use: {
             loader: "babel-loader",
             options: {
-              plugins: [
-                [
-                  "@babel/plugin-transform-runtime",
-                  {
-                    "regenerator": true,
-                  }
-                ]
-              ],
               presets: [
                 [
                   "@babel/preset-env",
@@ -59,7 +52,7 @@ module.exports = (buildMode, devServer, dirname, { masterPath, entryUnit, revisi
         }
       ]
     };
-  }*/
+  }
 
   return obj;
 };
