@@ -54,7 +54,7 @@ class Utils {
   }
 
   removeQueryString(str) {
-    return str.indexOf('?') > -1 ? str.substring( 0, str.indexOf('?') ) : str
+    return str.indexOf("?") > -1 ? str.substring(0, str.indexOf("?")) : str;
   }
 
   getAllFiles(dir, extensions = [], includes = true, filelist = []) {
@@ -77,7 +77,7 @@ class Utils {
     return filelist;
   }
 
-  prodCopyCompile({ module, from, to }) {
+  prodCopyCompile({ module, from, to, buildMode }) {
     return new Promise(resolve => {
       this.copyFiles({
         from,
@@ -88,7 +88,7 @@ class Utils {
         const promises = [];
         this.getAllFiles(to, [".html"]).forEach(path => {
           const compileOpt = {
-            mode: "development",
+            buildMode,
             resolvePath: path,
             redundantPaths: { resPath: path }
           };

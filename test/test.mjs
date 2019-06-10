@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 import Mocha from "mocha";
-import serverConfig from "../src/config.mjs";
+import serverConfig from "../src/serverConfig.mjs";
 import DevServer from "../src/devserver.mjs";
 import { UtilsTest } from "../src/utils.mjs";
 

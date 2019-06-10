@@ -3,7 +3,7 @@ import { Utils } from "./utils.mjs";
 const utils = new Utils();
 
 export default class Request {
-  constructor({ req, dirname, units, currentName, optional, mode }) {
+  constructor({ req, dirname, units, currentName, optional, buildMode, devServer }) {
     this.mode = "request";
 
     const path = {
@@ -38,8 +38,8 @@ export default class Request {
     }
 
     this.options = {
-      force: mode === "prod" ? true : false,
-      mode: mode === "prod" ? "production" : "development",
+      devServer,
+      buildMode,
       source: this.error ? null : source.source,
       redundantPaths: { resPath, filePath },
       resolvePath,

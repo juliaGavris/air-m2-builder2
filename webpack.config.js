@@ -1,24 +1,14 @@
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 
-module.exports = function(mode, dirname, { masterPath, entryUnit, revision = null } ) {
-
-  let webpackBuildMode = mode;
-
-  if(process.argv.includes("--mode=development")) {
-    webpackBuildMode = "development";
-  }
-  else if(process.argv.includes("--mode=production")) {
-    webpackBuildMode = "production";
-  }
-
+module.exports = (buildMode, devServer, dirname, { masterPath, entryUnit, revision = null }) => {
   const obj = {
-    mode: webpackBuildMode,
+    mode: buildMode,
     entry: [`${__dirname}/src/m2.js`, masterPath.join("")],
     externals: {
       m2: "__M2"
     },
     output: {
-      path: `${mode === "production" ? dirname : masterPath[0]}/dist`,
+      path: `${devServer ? masterPath[0] : dirname}/dist`,
       filename: "m2.js"
     },
     plugins: [
@@ -31,14 +21,15 @@ module.exports = function(mode, dirname, { masterPath, entryUnit, revision = nul
         revision,
         minify: {
           removeEmptyAttributes: function(attrName, tag) {
-            return tag === 'script' && attrName === 'revision'
+            return tag === "script" && attrName === "revision";
           }
         }
       })
     ]
   };
 
-  /*if (mode === "production") {
+  if (buildMode === "production") {
+    obj.entry.push(`${__dirname}/src/babel-polyfill.js`);
     obj.module = {
       rules: [
         {
@@ -46,14 +37,6 @@ module.exports = function(mode, dirname, { masterPath, entryUnit, revision = nul
           use: {
             loader: "babel-loader",
             options: {
-              plugins: [
-                [
-                  "@babel/plugin-transform-runtime",
-                  {
-                    "regenerator": true,
-                  }
-                ]
-              ],
               presets: [
                 [
                   "@babel/preset-env",
@@ -69,7 +52,7 @@ module.exports = function(mode, dirname, { masterPath, entryUnit, revision = nul
         }
       ]
     };
-  }*/
+  }
 
   return obj;
 };

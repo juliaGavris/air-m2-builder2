@@ -5,7 +5,7 @@ import { CompileSource, CompileResource, CompileHtml } from "./compile.mjs";
 const utils = new Utils();
 
 export default function(opt) {
-  const { mode, dirname, module, units, optional, resolvePath } = opt;
+  const { devServer, dirname, module, units, optional, resolvePath } = opt;
 
   const pkgPath = `${dirname}/node_modules/${module}/package.json`;
   if (!existsSync(pkgPath)) {
@@ -28,10 +28,7 @@ export default function(opt) {
     Compiler = CompileResource;
   }
 
-  const path =
-    mode === "development"
-      ? `${dirname}/node_modules/${module}/${units.dir}`
-      : `${dirname}/dist/${units.dirS}/${module}`;
+  const path = devServer ? `${dirname}/node_modules/${module}/${units.dir}` : `${dirname}/dist/${units.dirS}/${module}`;
   const entry = `${dirname}/node_modules/${module}/${main}`;
 
   return { Compiler, paths: { path, entry } };

@@ -6,7 +6,7 @@
   "scripts": {
     "patch": "npm version patch && npm publish && git push origin",
     "minor": "npm version minor && npm publish && git push origin",
-    "test": "node --experimental-modules ./test/test.mjs"
+    "test": "node --experimental-modules ./test/test.mjs --dev-server"
   },
   "bin": {
     "air-m2-builder2": "./bin/server.mjs"
@@ -24,6 +24,7 @@
     "@babel/runtime": "^7.4.5",
     "autoprefixer": "^9.5.1",
     "babel-loader": "^8.0.5",
+    "babel-polyfill": "^6.26.0",
     "chai": "^4.2.0",
     "chai-http": "^4.2.1",
     "copyfiles": "^2.1.0",
@@ -34,7 +35,6 @@
     "postcss": "^7.0.16",
     "webpack": "^4.29.5",
     "webpack-cli": "^3.2.3",
-    "webpack-dev-server": "^3.2.1",
-    "@babel/plugin-transform-runtime": "^7.4.4"
+    "webpack-dev-server": "^3.2.1"
   }
 }

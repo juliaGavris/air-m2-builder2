@@ -4,7 +4,7 @@ import webpackConfig from "../webpack.config.js";
 import webpackCompileConfig from "../webpack-compiler.config.mjs";
 import WebpackDevServer from "webpack-dev-server";
 import App from "../src/app.mjs";
-import BuildProd from "../src/prod.mjs";
+import BuildProd from "../src/buildprod.mjs";
 import after from "../src/after.mjs";
 
 export default class DevServer {
@@ -13,14 +13,14 @@ export default class DevServer {
   }
 
   precompile() {
-    const { mode, dirname, currentName } = this.options;
-    
+    const { buildMode, devServer, dirname, currentName } = this.options;
+
     return new Promise(res => {
-      webpack(webpackConfig(mode, dirname, this.options )).run(err => {
+      webpack(webpackConfig(buildMode, devServer, dirname, this.options)).run(err => {
         if (err) throw err;
 
         const compileOpt = {
-          mode,
+          buildMode,
           entry: `${dirname}/src/index.js`,
           path: path.resolve(dirname, "./dist/"),
           filename: `${currentName}/index.js`
@@ -37,7 +37,18 @@ export default class DevServer {
   }
 
   run() {
-    const { dirname, master, units, currentName, optional, latency, port, execute } = this.options;
+    const {
+      dirname,
+      master,
+      units,
+      currentName,
+      optional,
+      latency,
+      port,
+      execute,
+      buildMode,
+      devServer
+    } = this.options;
 
     const app = new App({ execute });
 
@@ -50,7 +61,7 @@ export default class DevServer {
       hot: true,
       inline: true,
       watchContentBase: true,
-      after: after({ dirname, currentName, units, optional, app, latency })
+      after: after({ dirname, currentName, units, optional, app, latency, buildMode, devServer })
     });
 
     server.listen(port, "0.0.0.0", err => {
