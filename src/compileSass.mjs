@@ -29,7 +29,7 @@ export default class CompileSass {
           sass.render({ data }, (err, result) => {
             if (err) {
               console.log(`Sass compile error:\n${err}`);
-              this.css[i] = this.scss[i];
+              this.css[i] = this.scss[i].data;
               res();
             } else {
               postcss([autoprefixer])

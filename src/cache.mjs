@@ -17,10 +17,12 @@ export default class Cache {
   }
 
   get(opt) {
-    if (!this.hasInstance(opt.module)) {
-      this.__queue.set(opt.module, this.__createInstance(opt));
+    const { module, moduleFileNameFull } = opt;
+
+    if (!this.hasInstance(module + moduleFileNameFull)) {
+      this.__queue.set(module + moduleFileNameFull, this.__createInstance(opt));
     }
 
-    return this.__queue.get(opt.module);
+    return this.__queue.get(module + moduleFileNameFull);
   }
 }

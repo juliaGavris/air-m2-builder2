@@ -12,8 +12,14 @@ export default class App {
       console.log("cache cleared completely");
     });
     repl.subscribe("event--cache-clear-by-key", key => {
-      if (this.installer.hasInstance(key)) {
-        this.installer.deleteInstance(key);
+      let hasKey = false;
+      [...this.installer.__queue.keys()].forEach(e => {
+        if (e.indexOf(key) > -1) {
+          this.installer.deleteInstance(e);
+          hasKey = true;
+        }
+      });
+      if (hasKey) {
         console.log(`cache cleared: ${key}`);
       } else {
         console.log(`unknown cache key: ${key}`);
@@ -26,23 +32,28 @@ export default class App {
     const install = new Install({ execute });
     this.installer = new Cache({ createInstance: opt => install.go(opt) });
     this.requester = new Cache({
-      createInstance: ({ module, resolvePath, ...options }) => {
+      createInstance: ({ module, resolvePath, moduleFileNameFull, ...options }) => {
         return new Promise((res, rej) => {
           this.installer
-            .get({ module, resolvePath, ...options })
+            .get({ module, resolvePath, moduleFileNameFull, ...options })
             .then(() => {
               access(resolvePath, constants.F_OK, err => {
-                this.requester.deleteInstance(module);
+                this.requester.deleteInstance(module + moduleFileNameFull);
 
                 if (err) {
-                  this.installer.deleteInstance(module);
+                  this.installer.deleteInstance(module + moduleFileNameFull);
                   this.installer
-                    .get({ module, resolvePath, ...options })
+                    .get({
+                      module,
+                      resolvePath,
+                      moduleFileNameFull,
+                      ...options
+                    })
                     .then(() => {
                       res();
                     })
                     .catch(() => {
-                      this.requester.deleteInstance(module);
+                      this.requester.deleteInstance(module + moduleFileNameFull);
                       rej();
                     });
                 } else {
@@ -51,7 +62,7 @@ export default class App {
               });
             })
             .catch(() => {
-              this.requester.deleteInstance(module);
+              this.requester.deleteInstance(module + moduleFileNameFull);
               rej();
             });
         });
