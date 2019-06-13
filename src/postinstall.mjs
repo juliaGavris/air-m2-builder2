@@ -4,7 +4,7 @@ import { CompileSource, CompileResource, CompileHtml } from "./compile.mjs";
 
 const utils = new Utils();
 
-export default function(opt) {
+export default opt => {
   const { devServer, dirname, module, units, optional, resolvePath } = opt;
 
   const pkgPath = `${dirname}/node_modules/${module}/package.json`;
@@ -17,14 +17,20 @@ export default function(opt) {
     utils.addUnique(optional, additionals);
   }
 
-  let Compiler = CompileSource;
   const pkg = readFileSync(pkgPath, "utf8");
   const { main } = JSON.parse(pkg);
   const extensionMain = utils.getExtension(main);
   const extensionPath = utils.getExtension(resolvePath);
+
+  let Compiler;
   if (extensionPath === ".html") {
     Compiler = CompileHtml;
-  } else if (extensionMain !== ".js") {
+  } else if (extensionPath === ".js") {
+    Compiler = CompileSource;
+  } else {
+    Compiler = CompileResource;
+  }
+  if (extensionMain !== ".js") {
     Compiler = CompileResource;
   }
 
@@ -32,4 +38,4 @@ export default function(opt) {
   const entry = `${dirname}/node_modules/${module}/${main}`;
 
   return { Compiler, paths: { path, entry } };
-}
+};

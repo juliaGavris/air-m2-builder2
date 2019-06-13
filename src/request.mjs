@@ -46,7 +46,8 @@ export default class Request {
       module,
       dirname,
       units,
-      optional
+      optional,
+      moduleFileNameFull: resolvePath.slice(resolvePath.indexOf(units.dir) + units.dir.length)
     };
   }
 }

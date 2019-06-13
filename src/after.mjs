@@ -80,7 +80,7 @@ export default function after({
           return sendResolve({ source: utils.removeQueryString(opt.resolvePath), method: "file", delay });
         })
         .catch(error => {
-          installer.deleteInstance(opt.module);
+          installer.deleteInstance(opt.module + opt.moduleFileNameFull);
           sendResolve({ source: error, method: "data", delay });
         });
     });
