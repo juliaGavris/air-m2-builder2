@@ -19,7 +19,7 @@ export default opt => {
 
   const pkg = readFileSync(pkgPath, "utf8");
   const { main } = JSON.parse(pkg);
-  // const extensionMain = utils.getExtension(main);
+  const extensionMain = utils.getExtension(main);
   const extensionPath = utils.getExtension(resolvePath);
 
   let Compiler;
@@ -30,9 +30,9 @@ export default opt => {
   } else {
     Compiler = CompileResource;
   }
-  // if (extensionMain !== ".js") {
-  //   Compiler = CompileResource;
-  // }
+  if (extensionMain !== ".js") {
+    Compiler = CompileResource;
+  }
 
   const path = devServer ? `${dirname}/node_modules/${module}/${units.dir}` : `${dirname}/dist/${units.dirS}/${module}`;
   const entry = `${dirname}/node_modules/${module}/${main}`;
