@@ -30,7 +30,7 @@ export default opt => {
   } else {
     Compiler = CompileResource;
   }
-  if (extensionMain !== ".js") {
+  if (!devServer && extensionMain !== ".js") {
     Compiler = CompileResource;
   }
 
