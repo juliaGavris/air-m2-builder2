@@ -5,9 +5,8 @@ import autoprefixer from "autoprefixer";
 
 export default class CompileSass {
   constructor({ htmlText, filePath }) {
-    this.scss = (
-      htmlText.match(/(?<=<style\s*type\s*=\s*["']?\s*text\/scss\s*["']?\s*>)([\s\S]*?)(?=<\/style>)/gi) || []
-    ).reduce((acc, style, i) => {
+    const reg = "(?<=<style\\s*type\\s*=\\s*[\"']?\\s*text\\/scss\\s*[\"']?[a-z0-9=\"' ]*>)([\\s\\S]*?)(?=<\\/style>)";
+    this.scss = (htmlText.match(new RegExp(reg, "gi")) || []).reduce((acc, style, i) => {
       acc.push({
         cssIndex: i,
         data: style.replace(/(?<=@import ["'])(\S+)(?=["'];)/g, match =>
