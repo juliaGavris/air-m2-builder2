@@ -3,13 +3,10 @@ import path from "path";
 import postcss from "postcss";
 import autoprefixer from "autoprefixer";
 import csstree from 'css-tree';
-import fs from 'fs';
 
 export default class CompileSass {
-  constructor({ htmlText, filePath, module }) {
+  constructor({ htmlText, filePath }) {
     const reg = `(?<=<style[a-z0-9="' ]*type\\s*=\\s*["']?\\s*text\\/scss\\s*["']?[a-z0-9="' ]*>)([\\s\\S]*?)(?=<\\/style>)`;
-    this.filePath = filePath
-    this.module = module
     this.scss = (htmlText.match(new RegExp(reg, "gi")) || []).reduce((acc, style, i) => {
       acc.push({
         cssIndex: i,
