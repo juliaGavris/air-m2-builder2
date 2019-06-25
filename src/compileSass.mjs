@@ -25,26 +25,23 @@ export default class CompileSass {
   }
 
   processPath (css) {
-    const ast = csstree.parse(css);
-    csstree.walk(ast, (node) => {
-      if (node.type === 'Url') {
-        const value = node.value;
-        let url = (value.type === 'Raw' ? value.value : value.value.substr(1, value.value.length - 2)).replace(/([^#?]+)([#?].*)/g, '$1');
-        let relPath = this.filePath.split('/');
+    const regex = /(?:\/\* <import[a-z0-9="' ]*rel\s*=\s*["']?\s*([a-zA-Z0-9\.\/]*)\s*["']?[a-z0-9="' ]*> \*\/)([\s\S]*?)(?:\/\* <\/import> \*\/)/gm;
 
-        if (url.indexOf('data:') > -1 || fs.existsSync(path.resolve(this.filePath, url)) || relPath.slice(-1) === this.module) return;
-
-        do {
-          url = `../${url}`.replace(/\/\.\//g, '/');
-          if (fs.existsSync(path.resolve(this.filePath, url))) {
-            node.value.value = url;
-          }
-        } while (relPath.length && relPath.pop() !== this.module);
-      }
+    return css.replace(regex, (full, rel, match) => {
+      if (rel === './') return match;
+      const ast = csstree.parse(match);
+      csstree.walk(ast, (node) => {
+        if (node.type === 'Url') {
+          const value = node.value;
+          let url = (value.type === 'Raw' ? value.value : value.value.substr(1, value.value.length - 2));
+          if (url.indexOf('data:') > -1) return;
+          node.value.value = `${rel}${url}`.replace(/\/\.\//g, '/');
+        }
+      });
+      return csstree.generate(ast);
     });
-    return csstree.generate(ast);
   }
-  
+
   compile() {
     const promises = [];
     this.scss.forEach(({ data }, i) => {
