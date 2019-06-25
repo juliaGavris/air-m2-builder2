@@ -7,18 +7,25 @@ import csstree from 'css-tree';
 export default class CompileSass {
   constructor({ htmlText, filePath }) {
     const reg = `(?<=<style[a-z0-9="' ]*type\\s*=\\s*["']?\\s*text\\/scss\\s*["']?[a-z0-9="' ]*>)([\\s\\S]*?)(?=<\\/style>)`;
+    this.filePath = filePath;
     this.scss = (htmlText.match(new RegExp(reg, "gi")) || []).reduce((acc, style, i) => {
       acc.push({
         cssIndex: i,
-        data: style.replace(/(?<=@import ["'])(\S+)(?=["'];)/g, match =>
-          path.resolve(filePath, match).replace(/\\/g, "/")
-        ),
+        data: this.processImports(style),
         idx: htmlText.indexOf(style),
         len: style.length
       });
       return acc;
     }, []);
     this.css = [];
+  }
+
+  processImports (scss) {
+    return scss.replace(/(?:@import ["'])(\S+)(?:["'];)/g, (match, importPath) => {
+      const lvl = (importPath.match(/\.\.\//g) || []).length;
+      const rel = new Array(lvl).fill('../').join('') || './';
+      return `/* <import rel="${rel}"> */ @import "${path.resolve(this.filePath, importPath).replace(/\\/g, '/')}"; /* </import> */`;
+    });
   }
 
   processPath (css) {
