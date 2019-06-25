@@ -50,6 +50,7 @@ class CompileHtml {
     const {
       buildMode,
       resolvePath,
+      module,
       redundantPaths: { resPath }
     } = opt;
 
@@ -76,7 +77,7 @@ class CompileHtml {
     this.config = {
       configs: [],
       scripts: [],
-      sass: new CompileSass({ htmlText: this.htmlText, filePath: croppedPath }),
+      sass: new CompileSass({ htmlText: this.htmlText, filePath: croppedPath, module }),
       paths: {
         pathOriginal: croppedPath,
         pathResolve: resolvePath,
