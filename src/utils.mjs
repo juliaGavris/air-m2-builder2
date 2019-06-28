@@ -86,11 +86,19 @@ class Utils {
         exclude: `${from}.js`
       }).then(() => {
         const promises = [];
-        this.getAllFiles(to, [".html"]).forEach(path => {
+        this.getAllFiles(to, ['.html']).forEach(rpath => {
+          const prodResolveImports = (data) => {
+            const regex = /import\s(?:["'\s]*[\w*{}\n\r\t, ]+from\s*)?["'\s]*([^"']+)["'\s]/gm;
+            let p = rpath.substr(rpath.lastIndexOf(module)).split('/').slice(0, -1);
+            const filePath = [p[0], 'src', p.slice(1)].join('/');
+            return data.replace(regex, (match, importPath) => importPath.indexOf('../') > -1 ? match.replace(importPath, `${filePath}/${importPath}`) : match);
+          };
+
           const compileOpt = {
             buildMode,
-            resolvePath: path,
-            redundantPaths: { resPath: path }
+            resolvePath: rpath,
+            redundantPaths: { resPath: rpath },
+            importPathResolve: prodResolveImports
           };
           promises.push(new CompileHtml(compileOpt).run());
         });

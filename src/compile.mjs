@@ -50,7 +50,8 @@ class CompileHtml {
     const {
       buildMode,
       resolvePath,
-      redundantPaths: { resPath }
+      redundantPaths: { resPath },
+      importPathResolve
     } = opt;
 
     this.htmlText = readFileSync(resPath, "utf8");
@@ -98,8 +99,12 @@ class CompileHtml {
         if (!existsSync(tempDir)) {
           mkdirSync(tempDir);
         }
-        writeFileSync(`${tempDir}${filename}`, data, "utf8");
 
+        scripts.push({ file: `${tempDir}/${filenameBundle}`, idx: this.htmlText.indexOf(data), len: data.length });
+        if (importPathResolve) {
+          data = importPathResolve(data);
+        }
+        writeFileSync(`${tempDir}${filename}`, data, 'utf8');
         const compileOpt = {
           buildMode,
           path: tempDir,
@@ -107,7 +112,6 @@ class CompileHtml {
           filename: filenameBundle
         };
         configs.push(webpackCompileConfig(compileOpt));
-        scripts.push({ file: `${tempDir}/${filenameBundle}`, idx: this.htmlText.indexOf(data), len: data.length });
       });
     }
   }
@@ -125,8 +129,13 @@ class CompileHtml {
       configs.forEach(config => {
         const compiler = webpack(config);
         promises.push(
-          new Promise(res => {
-            compiler.run(() => {
+          new Promise((res, rej) => {
+            compiler.run((error, stats) => {
+              if (stats.hasErrors()) {
+                console.log(`ERROR: ${compiler.options.entry} compile error`);
+                rej(`ERROR '${compiler.options.entry}': compile error`);
+                return;
+              }
               res();
             });
           })
