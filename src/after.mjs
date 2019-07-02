@@ -54,16 +54,10 @@ export default function after({
 
       if (request.mode === "currentModule") {
         if (utils.getExtension(fileName) === ".html") {
-          const devResolveImports = (data) => {
-            const regex = /import\s(?:["'\s]*[\w*{}\n\r\t, ]+from\s*)?["'\s]*([^"']+)["'\s]/gm;
-            return data.replace(regex, (match, importPath) => importPath.indexOf('../') > -1 ? match.replace('../', '../../') : match);
-          };
-
           new CompileHtml({
             ...request.options,
             resolvePath: utils.removeQueryString(opt.resolvePath),
             redundantPaths: { resPath: filePath },
-            importPathResolve: devResolveImports
           })
             .run()
             .then(htmlText => {

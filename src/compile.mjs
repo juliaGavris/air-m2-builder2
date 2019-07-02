@@ -1,7 +1,30 @@
-import { existsSync, readFileSync, writeFileSync, readdirSync, mkdirSync, rmdirSync, unlinkSync } from "fs";
 import webpack from "webpack";
 import webpackCompileConfig from "../webpack-compiler.config.mjs";
 import CompileSass from "./compileSass.mjs";
+import fs from "fs";
+import MemoryFS from 'memory-fs';
+
+const memfs = new MemoryFS();
+const statOrig = memfs.stat.bind(memfs);
+const readFileOrig = memfs.readFile.bind(memfs);
+memfs.stat = function (path, cb) {
+  statOrig(path, function(err, result) {
+    if (err) {
+      return fs.stat(path, cb);
+    } else {
+      return cb(err, result);
+    }
+  });
+};
+memfs.readFile = function (path, cb) {
+  readFileOrig(path, function (err, result) {
+    if (err) {
+      return fs.readFile(path, cb);
+    } else {
+      return cb(err, result);
+    }
+  });
+};
 
 class CompileResource {
   run() {
@@ -54,7 +77,7 @@ class CompileHtml {
       importPathResolve
     } = opt;
 
-    this.htmlText = readFileSync(resPath, "utf8");
+    this.htmlText = fs.readFileSync(resPath, "utf8");
 
     const jsSources = ((text, ...regexp) => {
       const js = [];
@@ -92,23 +115,22 @@ class CompileHtml {
     } = this.config;
     if (jsSources !== null) {
       jsSources.forEach((data, i) => {
-        const tempDir = `${pathOriginal}${tempFolder}`;
         const filename = `/script${i}.js`;
         const filenameBundle = `script${i}-bundle.js`;
 
-        if (!existsSync(tempDir)) {
-          mkdirSync(tempDir);
+        if (!memfs.existsSync(pathOriginal)) {
+          memfs.mkdirpSync(pathOriginal);
         }
 
-        scripts.push({ file: `${tempDir}/${filenameBundle}`, idx: this.htmlText.indexOf(data), len: data.length });
+        scripts.push({ file: `${pathOriginal}/${filenameBundle}`, idx: this.htmlText.indexOf(data), len: data.length });
         if (importPathResolve) {
           data = importPathResolve(data);
         }
-        writeFileSync(`${tempDir}${filename}`, data, 'utf8');
+        memfs.writeFileSync(`${pathOriginal}${filename}`, data, 'utf8');
         const compileOpt = {
           buildMode,
-          path: tempDir,
-          entry: `${tempDir}${filename}`,
+          path: pathOriginal,
+          entry: `${pathOriginal}${filename}`,
           filename: filenameBundle
         };
         configs.push(webpackCompileConfig(compileOpt));
@@ -128,6 +150,10 @@ class CompileHtml {
 
       configs.forEach(config => {
         const compiler = webpack(config);
+        compiler.inputFileSystem = memfs;
+        compiler.resolvers.normal.fileSystem = memfs;
+        compiler.outputFileSystem = memfs;
+
         promises.push(
           new Promise((res, rej) => {
             compiler.run((error, stats) => {
@@ -151,7 +177,7 @@ class CompileHtml {
           .forEach(({ file, cssIndex, idx, len }) => {
             let newdata;
             if (file) {
-              newdata = readFileSync(file, "utf8");
+              newdata = memfs.readFileSync(file, "utf8");
             } else {
               newdata = css[cssIndex];
             }
@@ -164,18 +190,10 @@ class CompileHtml {
           .replace(/<stream-source>/gi, '<script data-source-type="stream-source">')
           .replace(/<\/stream-source>/gi, "</script>");
         const dirName = pathResolve.slice(0, pathResolve.lastIndexOf("/"));
-        if (!existsSync(dirName)) {
-          mkdirSync(dirName, { recursive: true });
+        if (!fs.existsSync(dirName)) {
+          fs.mkdirSync(dirName, { recursive: true });
         }
-        writeFileSync(pathResolve, this.htmlText, "utf8");
-
-        const tempDir = `${pathOriginal}${tempFolder}`;
-        if (existsSync(tempDir)) {
-          readdirSync(tempDir).forEach(file => {
-            unlinkSync(`${tempDir}/${file}`);
-          });
-          rmdirSync(tempDir);
-        }
+        fs.writeFileSync(pathResolve, this.htmlText, "utf8");
 
         resolve(this.htmlText);
       });
