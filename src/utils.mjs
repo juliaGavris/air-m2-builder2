@@ -1,8 +1,9 @@
-import { readFileSync, readdirSync, statSync } from "fs";
+import { readdirSync, readFileSync, statSync } from "fs";
 import path from "path";
 import copyfiles from "copyfiles";
 import { exec } from "child_process";
 import { CompileHtml } from "./compile.mjs";
+import glob from "glob";
 
 class Utils {
   getRandomInt(max, min = 0) {
@@ -31,10 +32,7 @@ class Utils {
   copyFiles({ from, to, up, exclude = [] }) {
     return new Promise(res => {
       copyfiles([from, to], { up, exclude }, err => {
-        if (err) {
-          throw err;
-        }
-
+        if (err) throw err;
         res();
       });
     });
@@ -77,30 +75,25 @@ class Utils {
     return filelist;
   }
 
-  prodCopyCompile({ module, from, to, buildMode }) {
-    return new Promise(resolve => {
+  prodCopyCompile ({ from, to, buildMode }) {
+    return new Promise((resolve, reject) => {
       this.copyFiles({
         from,
         to,
         up: this.getUp(from),
-        exclude: `${from}.js`
+        exclude: [`${from}.html`, `${from}.js`]
       }).then(() => {
         const promises = [];
-        this.getAllFiles(to, ['.html']).forEach(rpath => {
-          const prodResolveImports = (data) => {
-            const regex = /import\s(?:["'\s]*[\w*{}\n\r\t, ]+from\s*)?["'\s]*([^"']+)["'\s]/gm;
-            let p = rpath.substr(rpath.lastIndexOf(module)).split('/').slice(0, -1);
-            const filePath = [p[0], 'src', p.slice(1)].join('/');
-            return data.replace(regex, (match, importPath) => importPath.indexOf('../') > -1 ? match.replace(importPath, `${filePath}/${importPath}`) : match);
-          };
-
-          const compileOpt = {
-            buildMode,
-            resolvePath: rpath,
-            redundantPaths: { resPath: rpath },
-            importPathResolve: prodResolveImports
-          };
-          promises.push(new CompileHtml(compileOpt).run());
+        glob(`${from}.html`, {}, (err, files) => {
+          if (err) reject(err);
+          files.map(file => {
+            const compileOpt = {
+              buildMode,
+              resolvePath: `${to}/${file.substring(from.replace('/**/*', '').length)}`,
+              redundantPaths: { resPath: file },
+            };
+            promises.push(new CompileHtml(compileOpt).run());
+          });
         });
         Promise.all(promises).then(() => {
           if (promises.length > 0) {

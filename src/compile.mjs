@@ -1,30 +1,10 @@
 import webpack from "webpack";
 import webpackCompileConfig from "../webpack-compiler.config.mjs";
 import CompileSass from "./compileSass.mjs";
+import crypto from "crypto";
+import { normalize } from "path";
+import glob from "glob";
 import fs from "fs";
-import MemoryFS from 'memory-fs';
-
-const memfs = new MemoryFS();
-const statOrig = memfs.stat.bind(memfs);
-const readFileOrig = memfs.readFile.bind(memfs);
-memfs.stat = function (path, cb) {
-  statOrig(path, function(err, result) {
-    if (err) {
-      return fs.stat(path, cb);
-    } else {
-      return cb(err, result);
-    }
-  });
-};
-memfs.readFile = function (path, cb) {
-  readFileOrig(path, function (err, result) {
-    if (err) {
-      return fs.readFile(path, cb);
-    } else {
-      return cb(err, result);
-    }
-  });
-};
 
 class CompileResource {
   run() {
@@ -74,10 +54,20 @@ class CompileHtml {
       buildMode,
       resolvePath,
       redundantPaths: { resPath },
-      importPathResolve
     } = opt;
 
     this.htmlText = fs.readFileSync(resPath, "utf8");
+
+    const croppedPath = resPath.slice(0, resPath.lastIndexOf("/"));
+    this.config = {
+      configs: [],
+      scripts: [],
+      sass: new CompileSass({ htmlText: this.htmlText, filePath: croppedPath }),
+      paths: {
+        pathOriginal: croppedPath,
+        pathResolve: resolvePath
+      }
+    };
 
     const jsSources = ((text, ...regexp) => {
       const js = [];
@@ -96,41 +86,28 @@ class CompileHtml {
       "(?<=<stream-source>)([\\s\\S]*?)(?=<\\/stream-source>)"
     );
 
-    const croppedPath = resPath.slice(0, resPath.lastIndexOf("/"));
-    this.config = {
-      configs: [],
-      scripts: [],
-      sass: new CompileSass({ htmlText: this.htmlText, filePath: croppedPath }),
-      paths: {
-        pathOriginal: croppedPath,
-        pathResolve: resolvePath,
-        tempFolder: "/$temp"
-      }
-    };
-
     const {
       configs,
       scripts,
-      paths: { pathOriginal, tempFolder }
+      paths: { pathOriginal }
     } = this.config;
     if (jsSources !== null) {
       jsSources.forEach((data, i) => {
-        const filename = `/script${i}.js`;
-        const filenameBundle = `script${i}-bundle.js`;
 
-        if (!memfs.existsSync(pathOriginal)) {
-          memfs.mkdirpSync(pathOriginal);
+        const hash = crypto.createHash('md5').update(data).digest('hex');
+        const filename = `.tmp-${hash}.js`;
+        const filenameBundle = `.tmp-${hash}-bundle.js`;
+
+        if (!fs.existsSync(pathOriginal)) {
+          fs.mkdirSync(pathOriginal, { recursive: true });
         }
 
         scripts.push({ file: `${pathOriginal}/${filenameBundle}`, idx: this.htmlText.indexOf(data), len: data.length });
-        if (importPathResolve) {
-          data = importPathResolve(data);
-        }
-        memfs.writeFileSync(`${pathOriginal}${filename}`, data, 'utf8');
+        fs.writeFileSync(`${pathOriginal}/${filename}`, data, 'utf8');
         const compileOpt = {
           buildMode,
-          path: pathOriginal,
-          entry: `${pathOriginal}${filename}`,
+          path: normalize(pathOriginal),
+          entry: `${pathOriginal}/${filename}`,
           filename: filenameBundle
         };
         configs.push(webpackCompileConfig(compileOpt));
@@ -144,16 +121,13 @@ class CompileHtml {
         configs,
         scripts,
         sass,
-        paths: { pathOriginal, pathResolve, tempFolder }
+        paths: { pathOriginal, pathResolve }
       } = this.config;
+
       let promises = [];
 
       configs.forEach(config => {
         const compiler = webpack(config);
-        compiler.inputFileSystem = memfs;
-        compiler.resolvers.normal.fileSystem = memfs;
-        compiler.outputFileSystem = memfs;
-
         promises.push(
           new Promise((res, rej) => {
             compiler.run((error, stats) => {
@@ -177,24 +151,30 @@ class CompileHtml {
           .forEach(({ file, cssIndex, idx, len }) => {
             let newdata;
             if (file) {
-              newdata = memfs.readFileSync(file, "utf8");
+              newdata = fs.readFileSync(file, "utf8");
             } else {
               newdata = css[cssIndex];
             }
             this.htmlText = this.htmlText.slice(0, idx) + newdata + this.htmlText.slice(idx + len);
           });
+
         this.htmlText = this.htmlText
           .replace(/\s*type\s*=\s*["']?\s*text\/scss\s*["']?\s*/g, " ")
           .replace(/<view-source>/gi, '<script data-source-type="view-source">')
           .replace(/<\/view-source>/gi, "</script>")
           .replace(/<stream-source>/gi, '<script data-source-type="stream-source">')
           .replace(/<\/stream-source>/gi, "</script>");
+
+        glob(`${pathOriginal}/.tmp*.js`, {}, (err, files) => {
+          if (err) throw err;
+          files.map(file => fs.unlink(file, () => {}));
+        });
+
         const dirName = pathResolve.slice(0, pathResolve.lastIndexOf("/"));
         if (!fs.existsSync(dirName)) {
           fs.mkdirSync(dirName, { recursive: true });
         }
         fs.writeFileSync(pathResolve, this.htmlText, "utf8");
-
         resolve(this.htmlText);
       });
     });
