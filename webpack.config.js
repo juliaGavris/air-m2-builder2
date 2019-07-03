@@ -19,6 +19,7 @@ module.exports = (buildMode, devServer, dirname, { masterPath, entryUnit, revisi
         template: masterPath.join("").replace(/\.js$/g, ".html"),
         filename: "index.html",
         revision,
+        buildMode,
         minify: {
           removeEmptyAttributes: function(attrName, tag) {
             return tag === "script" && attrName === "revision";
