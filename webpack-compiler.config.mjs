@@ -1,4 +1,4 @@
-export default ({ entry, path, filename, buildMode }) => {
+export default ({ entry, path, filename, buildMode, resolve = null}) => {
   const obj = {
     mode: buildMode,
     entry,
@@ -10,6 +10,10 @@ export default ({ entry, path, filename, buildMode }) => {
       libraryTarget: "this"
     }
   };
+
+  if (resolve) {
+    obj.resolve = resolve
+  }
 
   if (buildMode === "production") {
     obj.module = {

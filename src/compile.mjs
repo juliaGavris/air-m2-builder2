@@ -2,7 +2,7 @@ import webpack from "webpack";
 import webpackCompileConfig from "../webpack-compiler.config.mjs";
 import CompileSass from "./compileSass.mjs";
 import crypto from "crypto";
-import { normalize } from "path";
+import { dirname, normalize } from "path";
 import glob from "glob";
 import fs from "fs";
 
@@ -55,10 +55,16 @@ class CompileHtml {
       resolvePath,
       redundantPaths: { resPath },
     } = opt;
+    
+    if (resPath.indexOf('node_modules') > -1) {
+      this.buildDir = dirname(resPath)
+    } else {
+      this.buildDir = dirname(resolvePath)
+    }
 
     this.htmlText = fs.readFileSync(resPath, "utf8");
 
-    const croppedPath = resPath.slice(0, resPath.lastIndexOf("/"));
+    const croppedPath = dirname(resPath);
     this.config = {
       configs: [],
       scripts: [],
@@ -93,23 +99,32 @@ class CompileHtml {
     } = this.config;
     if (jsSources !== null) {
       jsSources.forEach((data, i) => {
-
         const hash = crypto.createHash('md5').update(data).digest('hex');
         const filename = `.tmp-${hash}.js`;
         const filenameBundle = `.tmp-${hash}-bundle.js`;
 
-        if (!fs.existsSync(pathOriginal)) {
-          fs.mkdirSync(pathOriginal, { recursive: true });
+        if (!fs.existsSync(this.buildDir)) {
+          fs.mkdirSync(this.buildDir, { recursive: true });
         }
 
-        scripts.push({ file: `${pathOriginal}/${filenameBundle}`, idx: this.htmlText.indexOf(data), len: data.length });
-        fs.writeFileSync(`${pathOriginal}/${filename}`, data, 'utf8');
+        scripts.push({ file: `${this.buildDir}/${filenameBundle}`, idx: this.htmlText.indexOf(data), len: data.length });
+        fs.writeFileSync(`${this.buildDir}/${filename}`, data, 'utf8');
         const compileOpt = {
           buildMode,
-          path: normalize(pathOriginal),
-          entry: `${pathOriginal}/${filename}`,
-          filename: filenameBundle
+          path: normalize(this.buildDir),
+          entry: `${this.buildDir}/${filename}`,
+          filename: filenameBundle,
         };
+
+        if (pathOriginal.indexOf('node_modules') === -1) {
+          compileOpt.resolve = {
+            alias: {
+              '.': pathOriginal,
+              '..': pathOriginal.substr(0, pathOriginal.lastIndexOf('/'))
+            }
+          }
+        }
+
         configs.push(webpackCompileConfig(compileOpt));
       });
     }
@@ -165,7 +180,7 @@ class CompileHtml {
           .replace(/<stream-source>/gi, '<script data-source-type="stream-source">')
           .replace(/<\/stream-source>/gi, "</script>");
 
-        glob(`${pathOriginal}/.tmp*.js`, {}, (err, files) => {
+        glob(`${this.buildDir}/.tmp*.js`, {}, (err, files) => {
           if (err) throw err;
           files.map(file => fs.unlink(file, () => {}));
         });
