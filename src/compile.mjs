@@ -1,7 +1,10 @@
-import { existsSync, readFileSync, writeFileSync, readdirSync, mkdirSync, rmdirSync, unlinkSync } from "fs";
 import webpack from "webpack";
 import webpackCompileConfig from "../webpack-compiler.config.mjs";
 import CompileSass from "./compileSass.mjs";
+import crypto from "crypto";
+import { dirname, normalize } from "path";
+import glob from "glob";
+import fs from "fs";
 
 class CompileResource {
   run() {
@@ -50,10 +53,27 @@ class CompileHtml {
     const {
       buildMode,
       resolvePath,
-      redundantPaths: { resPath }
+      redundantPaths: { resPath },
     } = opt;
+    
+    if (resPath.indexOf('node_modules') > -1) {
+      this.buildDir = dirname(resPath)
+    } else {
+      this.buildDir = dirname(resolvePath)
+    }
 
-    this.htmlText = readFileSync(resPath, "utf8");
+    this.htmlText = fs.readFileSync(resPath, "utf8");
+
+    const croppedPath = dirname(resPath);
+    this.config = {
+      configs: [],
+      scripts: [],
+      sass: new CompileSass({ htmlText: this.htmlText, filePath: croppedPath }),
+      paths: {
+        pathOriginal: croppedPath,
+        pathResolve: resolvePath
+      }
+    };
 
     const jsSources = ((text, ...regexp) => {
       const js = [];
@@ -72,42 +92,40 @@ class CompileHtml {
       "(?<=<stream-source>)([\\s\\S]*?)(?=<\\/stream-source>)"
     );
 
-    const croppedPath = resPath.slice(0, resPath.lastIndexOf("/"));
-    this.config = {
-      configs: [],
-      scripts: [],
-      sass: new CompileSass({ htmlText: this.htmlText, filePath: croppedPath }),
-      paths: {
-        pathOriginal: croppedPath,
-        pathResolve: resolvePath,
-        tempFolder: "/$temp"
-      }
-    };
-
     const {
       configs,
       scripts,
-      paths: { pathOriginal, tempFolder }
+      paths: { pathOriginal }
     } = this.config;
     if (jsSources !== null) {
       jsSources.forEach((data, i) => {
-        const tempDir = `${pathOriginal}${tempFolder}`;
-        const filename = `/script${i}.js`;
-        const filenameBundle = `script${i}-bundle.js`;
+        const hash = crypto.createHash('md5').update(data).digest('hex');
+        const filename = `.tmp-${hash}.js`;
+        const filenameBundle = `.tmp-${hash}-bundle.js`;
 
-        if (!existsSync(tempDir)) {
-          mkdirSync(tempDir);
+        if (!fs.existsSync(this.buildDir)) {
+          fs.mkdirSync(this.buildDir, { recursive: true });
         }
-        writeFileSync(`${tempDir}${filename}`, data, "utf8");
 
+        scripts.push({ file: `${this.buildDir}/${filenameBundle}`, idx: this.htmlText.indexOf(data), len: data.length });
+        fs.writeFileSync(`${this.buildDir}/${filename}`, data, 'utf8');
         const compileOpt = {
           buildMode,
-          path: tempDir,
-          entry: `${tempDir}${filename}`,
-          filename: filenameBundle
+          path: normalize(this.buildDir),
+          entry: `${this.buildDir}/${filename}`,
+          filename: filenameBundle,
         };
+
+        if (pathOriginal.indexOf('node_modules') === -1) {
+          compileOpt.resolve = {
+            alias: {
+              '.': pathOriginal,
+              '..': pathOriginal.substr(0, pathOriginal.lastIndexOf('/'))
+            }
+          }
+        }
+
         configs.push(webpackCompileConfig(compileOpt));
-        scripts.push({ file: `${tempDir}/${filenameBundle}`, idx: this.htmlText.indexOf(data), len: data.length });
       });
     }
   }
@@ -118,15 +136,21 @@ class CompileHtml {
         configs,
         scripts,
         sass,
-        paths: { pathOriginal, pathResolve, tempFolder }
+        paths: { pathOriginal, pathResolve }
       } = this.config;
+
       let promises = [];
 
       configs.forEach(config => {
         const compiler = webpack(config);
         promises.push(
-          new Promise(res => {
-            compiler.run(() => {
+          new Promise((res, rej) => {
+            compiler.run((error, stats) => {
+              if (stats.hasErrors()) {
+                console.log(`ERROR: ${compiler.options.entry} compile error`);
+                rej(`ERROR '${compiler.options.entry}': compile error`);
+                return;
+              }
               res();
             });
           })
@@ -142,32 +166,30 @@ class CompileHtml {
           .forEach(({ file, cssIndex, idx, len }) => {
             let newdata;
             if (file) {
-              newdata = readFileSync(file, "utf8");
+              newdata = fs.readFileSync(file, "utf8");
             } else {
               newdata = css[cssIndex];
             }
             this.htmlText = this.htmlText.slice(0, idx) + newdata + this.htmlText.slice(idx + len);
           });
+
         this.htmlText = this.htmlText
           .replace(/\s*type\s*=\s*["']?\s*text\/scss\s*["']?\s*/g, " ")
           .replace(/<view-source>/gi, '<script data-source-type="view-source">')
           .replace(/<\/view-source>/gi, "</script>")
           .replace(/<stream-source>/gi, '<script data-source-type="stream-source">')
           .replace(/<\/stream-source>/gi, "</script>");
+
+        glob(`${this.buildDir}/.tmp*.js`, {}, (err, files) => {
+          if (err) throw err;
+          files.map(file => fs.unlink(file, () => {}));
+        });
+
         const dirName = pathResolve.slice(0, pathResolve.lastIndexOf("/"));
-        if (!existsSync(dirName)) {
-          mkdirSync(dirName, { recursive: true });
+        if (!fs.existsSync(dirName)) {
+          fs.mkdirSync(dirName, { recursive: true });
         }
-        writeFileSync(pathResolve, this.htmlText, "utf8");
-
-        const tempDir = `${pathOriginal}${tempFolder}`;
-        if (existsSync(tempDir)) {
-          readdirSync(tempDir).forEach(file => {
-            unlinkSync(`${tempDir}/${file}`);
-          });
-          rmdirSync(tempDir);
-        }
-
+        fs.writeFileSync(pathResolve, this.htmlText, "utf8");
         resolve(this.htmlText);
       });
     });

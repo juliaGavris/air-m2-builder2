@@ -57,7 +57,7 @@ export default function after({
           new CompileHtml({
             ...request.options,
             resolvePath: utils.removeQueryString(opt.resolvePath),
-            redundantPaths: { resPath: filePath }
+            redundantPaths: { resPath: filePath },
           })
             .run()
             .then(htmlText => {
