@@ -1,14 +1,14 @@
-import { existsSync } from "fs";
-import postInstall from "./postinstall.mjs";
+import { existsSync } from 'fs';
+import postInstall from './postinstall.mjs';
 
 export default class Install {
-  constructor({ execute }) {
+  constructor ({ execute }) {
     this.__queue = [];
     this.__pending = false;
     this.execute = execute;
   }
 
-  go(opt) {
+  go (opt) {
     return this.install(opt).then(() => {
       const {
         Compiler,
@@ -19,7 +19,7 @@ export default class Install {
     });
   }
 
-  install(opt) {
+  install (opt) {
     if (!opt.devServer || !existsSync(opt.dirname + `/node_modules/${opt.module}`)) {
       return this.pushRequest(opt);
     } else {
@@ -29,7 +29,7 @@ export default class Install {
     }
   }
 
-  pushRequest(opt) {
+  pushRequest (opt) {
     this.__queue.push(opt);
 
     if (!this.__pending) {
@@ -50,7 +50,7 @@ export default class Install {
     return this.promise;
   }
 
-  next(cb) {
+  next (cb) {
     if (this.__queue.length > 0) {
       this.run().then(() => {
         cb();
@@ -61,15 +61,15 @@ export default class Install {
     }
   }
 
-  run() {
+  run () {
     return new Promise((res, rej) => {
       const processing = this.__queue.splice(0, this.__queue.length);
       const pkg = processing
         .reduce((prev, cur) => {
-          return prev + cur.source + " ";
-        }, "")
+          return prev + cur.source + ' ';
+        }, '')
         .trim();
-      const pkgList = pkg.replace(/ /g, "\n").split("\n");
+      const pkgList = pkg.replace(/ /g, '\n').split('\n');
       pkgList.forEach(p => {
         console.log(`install: ${p} ...`);
       });
@@ -77,7 +77,7 @@ export default class Install {
       this.execute({ pkg, dirname: processing[0].dirname }).then(error => {
         if (error) {
           console.log(error);
-          rej(`ERROR: install error\n${pkgList.join("\n")}`);
+          rej(`ERROR: install error\n${pkgList.join('\n')}`);
           this.__pending = false;
           return;
         }

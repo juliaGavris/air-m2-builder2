@@ -1,17 +1,17 @@
-import { access, constants } from "fs";
-import Install from "./install.mjs";
-import Cache from "./cache.mjs";
-import Repl from "./repl.mjs";
+import { access, constants } from 'fs';
+import Install from './install.mjs';
+import Cache from './cache.mjs';
+import Repl from './repl.mjs';
 
 export default class App {
-  constructor({ execute }) {
+  constructor ({ execute }) {
     const repl = new Repl();
     repl.start();
-    repl.subscribe("event--cache-cleared-all", () => {
+    repl.subscribe('event--cache-cleared-all', () => {
       this.installer.clear();
-      console.log("cache cleared completely");
+      console.log('cache cleared completely');
     });
-    repl.subscribe("event--cache-clear-by-key", key => {
+    repl.subscribe('event--cache-clear-by-key', key => {
       let hasKey = false;
       [...this.installer.__queue.keys()].forEach(e => {
         if (e.indexOf(key) > -1) {
@@ -25,7 +25,7 @@ export default class App {
         console.log(`unknown cache key: ${key}`);
       }
     });
-    repl.subscribe("event--throw-msg", msg => {
+    repl.subscribe('event--throw-msg', msg => {
       console.log(msg);
     });
 

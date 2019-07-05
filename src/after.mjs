@@ -1,33 +1,33 @@
-import Request from "./request.mjs";
-import { CompileHtml } from "./compile.mjs";
-import { Utils } from "./utils.mjs";
+import Request from './request.mjs';
+import { CompileHtml } from './compile.mjs';
+import { Utils } from './utils.mjs';
 
-export default function after({
-  dirname,
-  currentName,
-  units,
-  optional,
-  latency,
-  app: { requester, installer },
-  execute,
-  devServer,
-  buildMode
-}) {
-  return function(app) {
+export default function after ({
+                                 dirname,
+                                 currentName,
+                                 units,
+                                 optional,
+                                 latency,
+                                 app: { requester, installer },
+                                 execute,
+                                 devServer,
+                                 buildMode
+                               }) {
+  return function (app) {
     app.get(`/${units.dirS}/*`, (req, res) => {
-      function sendResolve({ source, method, delay }) {
+      function sendResolve ({ source, method, delay }) {
         if (delay === 0) {
-          if (method === "data") {
+          if (method === 'data') {
             res.send(source);
-          } else if (method === "file") {
+          } else if (method === 'file') {
             res.sendFile(source);
           }
         } else {
-          if (method === "data") {
+          if (method === 'data') {
             setTimeout(() => {
               res.send(source);
             }, delay);
-          } else if (method === "file") {
+          } else if (method === 'file') {
             setTimeout(() => {
               res.sendFile(source);
             }, delay);
@@ -52,8 +52,8 @@ export default function after({
         delay = latency[i - 1].delay || 0;
       }
 
-      if (request.mode === "currentModule") {
-        if (utils.getExtension(fileName) === ".html") {
+      if (request.mode === 'currentModule') {
+        if (utils.getExtension(fileName) === '.html') {
           new CompileHtml({
             ...request.options,
             resolvePath: utils.removeQueryString(opt.resolvePath),
@@ -61,27 +61,27 @@ export default function after({
           })
             .run()
             .then(htmlText => {
-              sendResolve({ source: htmlText, method: "data", delay });
+              sendResolve({ source: htmlText, method: 'data', delay });
             });
         } else {
-          sendResolve({ source: filePath, method: "file", delay });
+          sendResolve({ source: filePath, method: 'file', delay });
         }
         return;
       }
       if (request.error) {
         console.log(request.error);
-        sendResolve({ source: request.error, method: "data", delay });
+        sendResolve({ source: request.error, method: 'data', delay });
         return;
       }
 
       requester
         .get(opt)
         .then(() => {
-          return sendResolve({ source: utils.removeQueryString(opt.resolvePath), method: "file", delay });
+          return sendResolve({ source: utils.removeQueryString(opt.resolvePath), method: 'file', delay });
         })
         .catch(error => {
           installer.deleteInstance(opt.module + opt.moduleFileNameFull);
-          sendResolve({ source: error, method: "data", delay });
+          sendResolve({ source: error, method: 'data', delay });
         });
     });
   };

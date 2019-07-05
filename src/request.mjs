@@ -1,10 +1,10 @@
-import { Utils } from "./utils.mjs";
+import { Utils } from './utils.mjs';
 
 const utils = new Utils();
 
 export default class Request {
-  constructor({ req, dirname, units, currentName, optional, buildMode, devServer }) {
-    this.mode = "request";
+  constructor ({ req, dirname, units, currentName, optional, buildMode, devServer }) {
+    this.mode = 'request';
 
     const path = {
       fullPath: dirname + req.originalUrl,
@@ -21,7 +21,7 @@ export default class Request {
     path.filePath = `${dirname}/node_modules/${module}/${units.dir}/${this.fileName}`;
     path.resPath = `${dirname}/node_modules/${module}/src/${this.fileName}`;
 
-    if ([".js", ".html"].includes(extension)) {
+    if (['.js', '.html'].includes(extension)) {
       path.resolvePath = path.filePath;
     } else {
       path.resolvePath = path.resPath;
@@ -29,7 +29,7 @@ export default class Request {
     const { filePath, resPath, resolvePath } = path;
 
     if (module === currentName) {
-      this.mode = "currentModule";
+      this.mode = 'currentModule';
     }
 
     const source = [...optional.values()].find(e => e.module === module);

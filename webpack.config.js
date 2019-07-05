@@ -16,8 +16,8 @@ module.exports = (buildMode, devServer, dirname, { masterPath, entryUnit, revisi
         entryUnit,
         inject: false,
         hash: true,
-        template: masterPath.join("").replace(/\.js$/g, ".html"),
-        filename: "index.html",
+        template: masterPath.join('').replace(/\.js$/g, '.html'),
+        filename: 'index.html',
         revision,
         buildMode,
         minify: {

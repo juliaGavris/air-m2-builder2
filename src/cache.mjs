@@ -1,22 +1,22 @@
 export default class Cache {
-  constructor({ createInstance }) {
+  constructor ({ createInstance }) {
     this.__queue = new Map();
     this.__createInstance = createInstance;
   }
 
-  deleteInstance(module) {
+  deleteInstance (module) {
     this.__queue.delete(module);
   }
 
-  hasInstance(module) {
+  hasInstance (module) {
     return this.__queue.has(module);
   }
 
-  clear() {
+  clear () {
     this.__queue.clear();
   }
 
-  get(opt) {
+  get (opt) {
     const { module, moduleFileNameFull } = opt;
 
     if (!this.hasInstance(module + moduleFileNameFull)) {

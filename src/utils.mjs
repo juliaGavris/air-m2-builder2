@@ -1,26 +1,26 @@
-import { readdirSync, readFileSync, statSync } from "fs";
-import path from "path";
-import copyfiles from "copyfiles";
-import { exec } from "child_process";
-import { CompileHtml } from "./compile.mjs";
-import glob from "glob";
+import { readdirSync, readFileSync, statSync } from 'fs';
+import path from 'path';
+import copyfiles from 'copyfiles';
+import { exec } from 'child_process';
+import { CompileHtml } from './compile.mjs';
+import glob from 'glob';
 
 class Utils {
-  getRandomInt(max, min = 0) {
+  getRandomInt (max, min = 0) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
   }
 
-  getAdditional(filename, requires, all = false) {
+  getAdditional (filename, requires, all = false) {
     let optDep;
     if (!all) {
-      optDep = JSON.parse(readFileSync(filename, "utf8"))[requires];
+      optDep = JSON.parse(readFileSync(filename, 'utf8'))[requires];
     } else {
-      optDep = JSON.parse(readFileSync(filename, "utf8"));
+      optDep = JSON.parse(readFileSync(filename, 'utf8'));
     }
     return optDep == null ? optDep : Object.keys(optDep).map(key => ({ module: key, source: optDep[key] }));
   }
 
-  addUnique(opt, add) {
+  addUnique (opt, add) {
     const optMap = [...opt.values()].map(e => e.module);
     add.forEach(e => {
       if (!optMap.includes(e.module)) {
@@ -29,7 +29,7 @@ class Utils {
     });
   }
 
-  copyFiles({ from, to, up, exclude = [] }) {
+  copyFiles ({ from, to, up, exclude = [] }) {
     return new Promise(res => {
       copyfiles([from, to], { up, exclude }, err => {
         if (err) throw err;
@@ -38,27 +38,27 @@ class Utils {
     });
   }
 
-  getUp(from) {
+  getUp (from) {
     return from
-      .replace(/\\/g, "/")
-      .slice(0, from.indexOf("**"))
+      .replace(/\\/g, '/')
+      .slice(0, from.indexOf('**'))
       .match(/\//g).length;
   }
 
-  getExtension(str) {
+  getExtension (str) {
     const match = str.match(/\.\w+$/g);
 
     return match ? match[0] : null;
   }
 
-  removeQueryString(str) {
-    return str.indexOf("?") > -1 ? str.substring(0, str.indexOf("?")) : str;
+  removeQueryString (str) {
+    return str.indexOf('?') > -1 ? str.substring(0, str.indexOf('?')) : str;
   }
 
-  getAllFiles(dir, extensions = [], includes = true, filelist = []) {
+  getAllFiles (dir, extensions = [], includes = true, filelist = []) {
     const files = readdirSync(dir);
     files.forEach(file => {
-      const fileFullPath = `${dir}${/\/$/.test(dir) ? "" : "/"}${file}`;
+      const fileFullPath = `${dir}${/\/$/.test(dir) ? '' : '/'}${file}`;
       if (statSync(fileFullPath).isDirectory()) {
         filelist = this.getAllFiles(`${fileFullPath}/`, extensions, includes, filelist);
       } else {
@@ -107,7 +107,7 @@ class Utils {
 }
 
 class UtilsDev extends Utils {
-  static execute({ pkg }) {
+  static execute ({ pkg }) {
     return new Promise(res => {
       const execString = `npm i --no-save --no-optional ${pkg}`;
       exec(execString, error => {
@@ -118,9 +118,9 @@ class UtilsDev extends Utils {
 }
 
 class UtilsTest extends Utils {
-  execute({ pkg, dirname }) {
+  execute ({ pkg, dirname }) {
     return new Promise(res => {
-      const testDir = path.resolve(path.dirname(""));
+      const testDir = path.resolve(path.dirname(''));
       const unit = pkg.match(/[-\w]+$/)[0];
       const from = `${testDir}/${pkg}/**/*`;
       super.copyFiles({ from, to: `${dirname}/node_modules/${unit}`, up: super.getUp(from) }).then(error => {

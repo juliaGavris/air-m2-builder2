@@ -1,6 +1,6 @@
-import { existsSync, readFileSync } from "fs";
-import { Utils } from "./utils.mjs";
-import { CompileSource, CompileResource, CompileHtml } from "./compile.mjs";
+import { existsSync, readFileSync } from 'fs';
+import { Utils } from './utils.mjs';
+import { CompileHtml, CompileResource, CompileSource } from './compile.mjs';
 
 const utils = new Utils();
 
@@ -17,20 +17,20 @@ export default opt => {
     utils.addUnique(optional, additionals);
   }
 
-  const pkg = readFileSync(pkgPath, "utf8");
+  const pkg = readFileSync(pkgPath, 'utf8');
   const { main } = JSON.parse(pkg);
   const extensionMain = utils.getExtension(main);
   const extensionPath = utils.getExtension(resolvePath);
 
   let Compiler;
-  if (extensionPath === ".html") {
+  if (extensionPath === '.html') {
     Compiler = CompileHtml;
-  } else if (extensionPath === ".js") {
+  } else if (extensionPath === '.js') {
     Compiler = CompileSource;
   } else {
     Compiler = CompileResource;
   }
-  if (!devServer && extensionMain !== ".js") {
+  if (!devServer && extensionMain !== '.js') {
     Compiler = CompileResource;
   }
 
