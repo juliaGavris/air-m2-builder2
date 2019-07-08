@@ -42,6 +42,8 @@ export default class Request {
       buildMode,
       source: this.error ? null : source.source,
       redundantPaths: { resPath, filePath },
+      inputFile: resPath,
+      outputFile: resolvePath,
       resolvePath,
       module,
       dirname,

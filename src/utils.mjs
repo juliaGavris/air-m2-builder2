@@ -89,8 +89,8 @@ class Utils {
           files.map(file => {
             const compileOpt = {
               buildMode,
-              resolvePath: `${to}/${file.substring(from.replace('/**/*', '').length)}`,
-              redundantPaths: { resPath: file },
+              inputFile: file,
+              outputFile: `${to}/${file.substring(from.replace('/**/*', '').length)}`
             };
             promises.push(new CompileHtml(compileOpt).run());
           });

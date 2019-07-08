@@ -56,8 +56,8 @@ export default function after ({
         if (utils.getExtension(fileName) === '.html') {
           new CompileHtml({
             ...request.options,
-            resolvePath: utils.removeQueryString(opt.resolvePath),
-            redundantPaths: { resPath: filePath },
+            inputFile: filePath,
+            outputFile: utils.removeQueryString(opt.resolvePath)
           })
             .run()
             .then(htmlText => {

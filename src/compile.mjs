@@ -52,27 +52,19 @@ class CompileHtml {
   constructor (opt) {
     const {
       buildMode,
-      resolvePath,
-      redundantPaths: { resPath },
+      inputFile,
+      outputFile,
     } = opt;
 
-    if (resPath.indexOf('node_modules') > -1) {
-      this.buildDir = dirname(resPath);
-    } else {
-      this.buildDir = dirname(resolvePath);
-    }
+    this.inputFile = inputFile;
+    this.outputFile = outputFile;
+    this.buildDir = ~inputFile.indexOf('node_modules') ? dirname(inputFile) : dirname(outputFile);
+    this.htmlText = fs.readFileSync(inputFile, 'utf8');
 
-    this.htmlText = fs.readFileSync(resPath, 'utf8');
-
-    const croppedPath = dirname(resPath);
     this.config = {
       configs: [],
       scripts: [],
-      sass: new CompileSass({ htmlText: this.htmlText, filePath: croppedPath }),
-      paths: {
-        pathOriginal: croppedPath,
-        pathResolve: resolvePath
-      }
+      sass: new CompileSass({ htmlText: this.htmlText, filePath: dirname(inputFile) }),
     };
 
     const jsSources = ((text, ...regexp) => {
@@ -95,7 +87,6 @@ class CompileHtml {
     const {
       configs,
       scripts,
-      paths: { pathOriginal }
     } = this.config;
     if (jsSources !== null) {
       jsSources.forEach((data, i) => {
@@ -120,11 +111,11 @@ class CompileHtml {
           filename: filenameBundle,
         };
 
-        if (pathOriginal.indexOf('node_modules') === -1) {
+        if (!~inputFile.indexOf('node_modules')) {
           compileOpt.resolve = {
             alias: {
-              '.': pathOriginal,
-              '..': pathOriginal.substr(0, pathOriginal.lastIndexOf('/'))
+              '.': dirname(inputFile),
+              '..': dirname(dirname(inputFile))
             }
           };
         }
@@ -140,7 +131,6 @@ class CompileHtml {
         configs,
         scripts,
         sass,
-        paths: { pathOriginal, pathResolve }
       } = this.config;
 
       let promises = [];
@@ -189,11 +179,11 @@ class CompileHtml {
           files.map(file => fs.unlink(file, () => {}));
         });
 
-        const dirName = pathResolve.slice(0, pathResolve.lastIndexOf('/'));
+        const dirName = dirname(this.outputFile);
         if (!fs.existsSync(dirName)) {
           fs.mkdirSync(dirName, { recursive: true });
         }
-        fs.writeFileSync(pathResolve, this.htmlText, 'utf8');
+        fs.writeFileSync(this.outputFile, this.htmlText, 'utf8');
         resolve(this.htmlText);
       });
     });
