@@ -13,7 +13,7 @@ export default class DevServer {
   }
 
   precompile () {
-    const { buildMode, devServer, dirname, currentName } = this.options;
+    const { buildMode, devServer, dirname, currentModule } = this.options;
 
     return new Promise(res => {
       webpack(webpackConfig(buildMode, devServer, dirname, this.options)).run(err => {
@@ -23,7 +23,7 @@ export default class DevServer {
           buildMode,
           entry: `${dirname}/src/index.js`,
           path: path.resolve(dirname, './dist/'),
-          filename: `${currentName}/index.js`
+          filename: `${currentModule}/index.js`
         };
         this.compiler = webpack(webpackCompileConfig(compileOpt));
 
@@ -41,7 +41,7 @@ export default class DevServer {
       dirname,
       master,
       units,
-      currentName,
+      currentModule,
       optional,
       latency,
       port,
@@ -61,7 +61,7 @@ export default class DevServer {
       hot: true,
       inline: true,
       watchContentBase: true,
-      after: after({ dirname, currentName, units, optional, app, latency, buildMode, devServer })
+      after: after({ dirname, currentModule, units, optional, app, latency, buildMode, devServer })
     });
 
     server.listen(port, '0.0.0.0', err => {

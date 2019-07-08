@@ -39,7 +39,6 @@ export default class App {
             .then(() => {
               access(resolvePath, constants.F_OK, err => {
                 this.requester.deleteInstance(module + moduleFileNameFull);
-
                 if (err) {
                   this.installer.deleteInstance(module + moduleFileNameFull);
                   this.installer

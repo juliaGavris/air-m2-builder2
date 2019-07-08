@@ -1,18 +1,9 @@
 import Request from './request.mjs';
 import { CompileHtml } from './compile.mjs';
 import { Utils } from './utils.mjs';
+import path from 'path';
 
-export default function after ({
-                                 dirname,
-                                 currentName,
-                                 units,
-                                 optional,
-                                 latency,
-                                 app: { requester, installer },
-                                 execute,
-                                 devServer,
-                                 buildMode
-                               }) {
+export default function after ({ dirname, currentModule, units, optional, latency, app: { requester, installer }, execute, devServer, buildMode }) {
   return function (app) {
     app.get(`/${units.dirS}/*`, (req, res) => {
       function sendResolve ({ source, method, delay }) {
@@ -35,11 +26,10 @@ export default function after ({
         }
       }
 
-      const request = new Request({ req, dirname, units, currentName, optional, execute, buildMode, devServer });
+      const request = new Request({ req, dirname, units, currentModule, optional, execute, buildMode, devServer });
 
       const utils = new Utils();
-      const fileName = utils.removeQueryString(request.fileName);
-      const filePath = `${dirname}/src/${fileName}`;
+      const filePath = utils.removeQueryString(`${dirname}/src/${request.relativePath}`);
       const opt = request.options;
 
       let i = 0;
@@ -53,11 +43,25 @@ export default function after ({
       }
 
       if (request.mode === 'currentModule') {
-        if (utils.getExtension(fileName) === '.html') {
+        if (path.extname(filePath) === '.html') {
+          const importPathResolve = (data) => {
+            const regex = /import\s(?:["'\s]*[\w*{}\$\n\r\t, ]+from\s*)?["'\s]*([^"']+)["'\s]/gm;
+            const sourceDir = path.dirname(filePath);
+            return data.replace(regex, (match, importPath) => {
+              let res = match;
+              if (~importPath.indexOf('./')) {
+                res = match.replace(importPath, path.resolve(`${sourceDir}/${importPath}`));
+                res = res.replace(/\\/g, '/');
+              }
+              return res;
+            });
+          };
+
           new CompileHtml({
             ...request.options,
             inputFile: filePath,
-            outputFile: utils.removeQueryString(opt.resolvePath)
+            outputFile: utils.removeQueryString(opt.outputFile),
+            importPathResolve
           })
             .run()
             .then(htmlText => {

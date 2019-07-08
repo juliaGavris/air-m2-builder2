@@ -52,7 +52,7 @@ class Utils {
   }
 
   removeQueryString (str) {
-    return str.indexOf('?') > -1 ? str.substring(0, str.indexOf('?')) : str;
+    return ~str.indexOf('?') ? str.substring(0, str.indexOf('?')) : str;
   }
 
   getAllFiles (dir, extensions = [], includes = true, filelist = []) {

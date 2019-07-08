@@ -16,6 +16,7 @@ class CompileResource {
 
 class CompileSource {
   constructor (opt, { path, entry }) {
+    // console.log(opt, path, entry)
     this.opt = opt;
 
     const compileOpt = {
@@ -49,12 +50,7 @@ class CompileSource {
 }
 
 class CompileHtml {
-  constructor (opt) {
-    const {
-      buildMode,
-      inputFile,
-      outputFile,
-    } = opt;
+  constructor ({ buildMode, inputFile, outputFile, importPathResolve = null }) {
 
     this.inputFile = inputFile;
     this.outputFile = outputFile;
@@ -103,6 +99,11 @@ class CompileHtml {
           idx: this.htmlText.indexOf(data),
           len: data.length
         });
+
+        if (importPathResolve) {
+          data = importPathResolve(data);
+        }
+
         fs.writeFileSync(`${this.buildDir}/${filename}`, data, 'utf8');
         const compileOpt = {
           buildMode,
@@ -110,15 +111,6 @@ class CompileHtml {
           entry: `${this.buildDir}/${filename}`,
           filename: filenameBundle,
         };
-
-        if (!~inputFile.indexOf('node_modules')) {
-          compileOpt.resolve = {
-            alias: {
-              '.': dirname(inputFile),
-              '..': dirname(dirname(inputFile))
-            }
-          };
-        }
 
         configs.push(webpackCompileConfig(compileOpt));
       });

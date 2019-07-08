@@ -18,7 +18,7 @@ export default function serverConfig (options = {}) {
   let entryUnit = 'master';
 
   const dirname = options.customDir ? options.customDir : path.resolve(path.dirname(''));
-  const currentName = dirname.match(/[-\w]+$/)[0];
+  const currentModule = dirname.match(/[-\w]+$/)[0];
   const units = { dir: 'm2unit', requires: 'm2units' };
   units.dirS = `${units.dir}s`;
 
@@ -80,7 +80,7 @@ export default function serverConfig (options = {}) {
       json[PKG_REQUIRED_BY].length > 0
     ) {
       const __required = json[PKG_REQUIRED_BY][0].match(/[\w-]+$/g);
-      master = __required === null ? currentName : __required[0];
+      master = __required === null ? currentModule : __required[0];
     } else {
       throw 'Error: Cannot find source of \'m2.js\' file.';
     }
@@ -100,7 +100,7 @@ export default function serverConfig (options = {}) {
       utils.addUnique(optional, additionals);
     }
   }
-  if (master !== currentName) {
+  if (master !== currentModule) {
     const pkgjsonPath = `${dirname}/node_modules/${master}/package.json`;
     if (existsSync(pkgjsonPath)) {
       const additionals = utils.getAdditional(pkgjsonPath, units.requires);
@@ -110,7 +110,7 @@ export default function serverConfig (options = {}) {
     }
   }
 
-  const masterPath = [`${dirname}/${master === currentName ? '' : `node_modules/${master}`}`, '/src/m2.js'];
+  const masterPath = [`${dirname}/${master === currentModule ? '' : `node_modules/${master}`}`, '/src/m2.js'];
   if (!existsSync(masterPath.join(''))) {
     throw `Error: Cannot find 'm2.js' on source '${masterPath.join('')}'`;
   }
@@ -121,7 +121,7 @@ export default function serverConfig (options = {}) {
     buildMode,
     devServer,
     dirname,
-    currentName,
+    currentModule,
     master,
     masterPath,
     units,
