@@ -1,13 +1,13 @@
-import webpack from "webpack";
-import webpackCompileConfig from "../webpack-compiler.config.mjs";
-import CompileSass from "./compileSass.mjs";
-import crypto from "crypto";
-import { dirname, normalize } from "path";
-import glob from "glob";
-import fs from "fs";
+import webpack from 'webpack';
+import webpackCompileConfig from '../webpack-compiler.config.mjs';
+import CompileSass from './compileSass.mjs';
+import crypto from 'crypto';
+import { dirname, normalize } from 'path';
+import glob from 'glob';
+import fs from 'fs';
 
 class CompileResource {
-  run() {
+  run () {
     return new Promise(resolve => {
       resolve();
     });
@@ -15,19 +15,20 @@ class CompileResource {
 }
 
 class CompileSource {
-  constructor(opt, { path, entry }) {
+  constructor (opt, { path, entry }) {
+    // console.log(opt, path, entry)
     this.opt = opt;
 
     const compileOpt = {
       buildMode: this.opt.buildMode,
       path,
       entry,
-      filename: "index.js"
+      filename: 'index.js'
     };
     this.config = webpackCompileConfig(compileOpt);
   }
 
-  run() {
+  run () {
     return new Promise((res, rej) => {
       console.log(`compile: ${this.opt.module} ...`);
 
@@ -49,36 +50,23 @@ class CompileSource {
 }
 
 class CompileHtml {
-  constructor(opt) {
-    const {
-      buildMode,
-      resolvePath,
-      redundantPaths: { resPath },
-    } = opt;
-    
-    if (resPath.indexOf('node_modules') > -1) {
-      this.buildDir = dirname(resPath)
-    } else {
-      this.buildDir = dirname(resolvePath)
-    }
+  constructor ({ buildMode, inputFile, outputFile, importPathResolve = null }) {
 
-    this.htmlText = fs.readFileSync(resPath, "utf8");
+    this.inputFile = inputFile;
+    this.outputFile = outputFile;
+    this.buildDir = ~inputFile.indexOf('node_modules') ? dirname(inputFile) : dirname(outputFile);
+    this.htmlText = fs.readFileSync(inputFile, 'utf8');
 
-    const croppedPath = dirname(resPath);
     this.config = {
       configs: [],
       scripts: [],
-      sass: new CompileSass({ htmlText: this.htmlText, filePath: croppedPath }),
-      paths: {
-        pathOriginal: croppedPath,
-        pathResolve: resolvePath
-      }
+      sass: new CompileSass({ htmlText: this.htmlText, filePath: dirname(inputFile) }),
     };
 
     const jsSources = ((text, ...regexp) => {
       const js = [];
       regexp.forEach(reg => {
-        const match = text.match(new RegExp(reg, "gi"));
+        const match = text.match(new RegExp(reg, 'gi'));
         if (match !== null) {
           js.push(...match);
         }
@@ -87,15 +75,14 @@ class CompileHtml {
       return js;
     })(
       this.htmlText,
-      "(?<=<script>)([\\s\\S]*?)(?=<\\/script>)",
-      "(?<=<view-source>)([\\s\\S]*?)(?=<\\/view-source>)",
-      "(?<=<stream-source>)([\\s\\S]*?)(?=<\\/stream-source>)"
+      '(?<=<script>)([\\s\\S]*?)(?=<\\/script>)',
+      '(?<=<view-source>)([\\s\\S]*?)(?=<\\/view-source>)',
+      '(?<=<stream-source>)([\\s\\S]*?)(?=<\\/stream-source>)'
     );
 
     const {
       configs,
       scripts,
-      paths: { pathOriginal }
     } = this.config;
     if (jsSources !== null) {
       jsSources.forEach((data, i) => {
@@ -107,7 +94,16 @@ class CompileHtml {
           fs.mkdirSync(this.buildDir, { recursive: true });
         }
 
-        scripts.push({ file: `${this.buildDir}/${filenameBundle}`, idx: this.htmlText.indexOf(data), len: data.length });
+        scripts.push({
+          file: `${this.buildDir}/${filenameBundle}`,
+          idx: this.htmlText.indexOf(data),
+          len: data.length
+        });
+
+        if (importPathResolve) {
+          data = importPathResolve(data);
+        }
+
         fs.writeFileSync(`${this.buildDir}/${filename}`, data, 'utf8');
         const compileOpt = {
           buildMode,
@@ -116,27 +112,17 @@ class CompileHtml {
           filename: filenameBundle,
         };
 
-        if (pathOriginal.indexOf('node_modules') === -1) {
-          compileOpt.resolve = {
-            alias: {
-              '.': pathOriginal,
-              '..': pathOriginal.substr(0, pathOriginal.lastIndexOf('/'))
-            }
-          }
-        }
-
         configs.push(webpackCompileConfig(compileOpt));
       });
     }
   }
 
-  run() {
+  run () {
     return new Promise(resolve => {
       const {
         configs,
         scripts,
         sass,
-        paths: { pathOriginal, pathResolve }
       } = this.config;
 
       let promises = [];
@@ -166,7 +152,7 @@ class CompileHtml {
           .forEach(({ file, cssIndex, idx, len }) => {
             let newdata;
             if (file) {
-              newdata = fs.readFileSync(file, "utf8");
+              newdata = fs.readFileSync(file, 'utf8');
             } else {
               newdata = css[cssIndex];
             }
@@ -174,22 +160,22 @@ class CompileHtml {
           });
 
         this.htmlText = this.htmlText
-          .replace(/\s*type\s*=\s*["']?\s*text\/scss\s*["']?\s*/g, " ")
+          .replace(/\s*type\s*=\s*["']?\s*text\/scss\s*["']?\s*/g, ' ')
           .replace(/<view-source>/gi, '<script data-source-type="view-source">')
-          .replace(/<\/view-source>/gi, "</script>")
+          .replace(/<\/view-source>/gi, '</script>')
           .replace(/<stream-source>/gi, '<script data-source-type="stream-source">')
-          .replace(/<\/stream-source>/gi, "</script>");
+          .replace(/<\/stream-source>/gi, '</script>');
 
         glob(`${this.buildDir}/.tmp*.js`, {}, (err, files) => {
           if (err) throw err;
           files.map(file => fs.unlink(file, () => {}));
         });
 
-        const dirName = pathResolve.slice(0, pathResolve.lastIndexOf("/"));
+        const dirName = dirname(this.outputFile);
         if (!fs.existsSync(dirName)) {
           fs.mkdirSync(dirName, { recursive: true });
         }
-        fs.writeFileSync(pathResolve, this.htmlText, "utf8");
+        fs.writeFileSync(this.outputFile, this.htmlText, 'utf8');
         resolve(this.htmlText);
       });
     });

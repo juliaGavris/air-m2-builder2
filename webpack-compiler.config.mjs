@@ -11,10 +11,6 @@ export default ({ entry, path, filename, buildMode, resolve = null}) => {
     }
   };
 
-  if (resolve) {
-    obj.resolve = resolve
-  }
-
   if (buildMode === "production") {
     obj.module = {
       rules: [

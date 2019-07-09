@@ -1,10 +1,10 @@
 export default class REPL {
-  constructor() {
+  constructor () {
     this.__started = false;
     this.__events = {};
   }
 
-  subscribe(eventName, fn) {
+  subscribe (eventName, fn) {
     if (!this.__events[eventName]) {
       this.__events[eventName] = [];
     }
@@ -16,7 +16,7 @@ export default class REPL {
     };
   }
 
-  emit(eventName, data) {
+  emit (eventName, data) {
     const event = this.__events[eventName];
     if (event) {
       event.forEach(fn => {
@@ -25,10 +25,10 @@ export default class REPL {
     }
   }
 
-  start() {
+  start () {
     if (!this.__started) {
       this.__stdin = process.openStdin();
-      this.__stdin.on("data", msg => {
+      this.__stdin.on('data', msg => {
         this.process(msg);
       });
     }
@@ -36,7 +36,7 @@ export default class REPL {
     return this;
   }
 
-  splitCmd(str) {
+  splitCmd (str) {
     const args = str
       .toLowerCase()
       .trim()
@@ -44,36 +44,36 @@ export default class REPL {
     return { cmd: args.shift(), args };
   }
 
-  process(msg) {
+  process (msg) {
     const { cmd, args } = this.splitCmd(msg.asciiSlice().slice(0, -1));
     switch (cmd) {
-      case "clear":
+      case 'clear':
         switch (args[0]) {
           case undefined:
-            this.emit("event--throw-msg", "`clear` requires arguments");
+            this.emit('event--throw-msg', '`clear` requires arguments');
             break;
 
-          case "cache": {
+          case 'cache': {
             const key = args[1];
             switch (key) {
               case undefined:
-              case "all":
-                this.emit("event--cache-cleared-all");
+              case 'all':
+                this.emit('event--cache-cleared-all');
                 break;
 
               default:
-                this.emit("event--cache-clear-by-key", key);
+                this.emit('event--cache-clear-by-key', key);
             }
             break;
           }
 
           default:
-            this.emit("event--throw-msg", `UNKNOWN ARGUMENT: ${args[0]}`);
+            this.emit('event--throw-msg', `UNKNOWN ARGUMENT: ${args[0]}`);
         }
         break;
 
       default:
-        this.emit("event--throw-msg", `UNKNOWN COMMAND: ${cmd}`);
+        this.emit('event--throw-msg', `UNKNOWN COMMAND: ${cmd}`);
     }
   }
 }

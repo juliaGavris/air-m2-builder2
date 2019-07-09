@@ -1,18 +1,18 @@
-import { Utils } from "./utils.mjs";
-import { CompileSource } from "./compile.mjs";
-import Install from "./install.mjs";
-import RequestOpt from "./request.mjs";
+import { Utils } from './utils.mjs';
+import { CompileSource } from './compile.mjs';
+import Install from './install.mjs';
+import RequestOpt from './request.mjs';
 
 const utils = new Utils();
 
 export default class BuildProd {
-  constructor(opt) {
+  constructor (opt) {
     this.opt = opt;
     this.inprocess = [];
     this.install = new Install({ execute: this.opt.execute });
   }
 
-  next() {
+  next () {
     const { optional } = this.opt;
 
     for (let option of optional) {
@@ -24,24 +24,24 @@ export default class BuildProd {
     }
   }
 
-  bundle(value) {
-    const { dirname, currentName, units, optional, buildMode, devServer } = this.opt;
+  bundle (value) {
+    const { dirname, currentModule, units, optional, buildMode, devServer } = this.opt;
     const { module } = value;
     const req = {
       originalUrl: `/m2units/${module}/index.js`,
       path: `/m2units/${module}/index.js`
     };
-    const request = new RequestOpt({ req, dirname, units, currentName, optional, buildMode, devServer });
+    const request = new RequestOpt({ req, dirname, units, currentModule, optional, buildMode, devServer });
 
     if (request.error) {
       console.log(request.error);
       this.next();
-    } else if (request.mode === "currentModule") {
+    } else if (request.mode === 'currentModule') {
       utils
         .prodCopyCompile({
-          module: currentName,
+          module: currentModule,
           from: `${dirname}/src/**/*`,
-          to: `${dirname}/dist/${units.dirS}/${currentName}`,
+          to: `${dirname}/dist/${units.dirS}/${currentModule}`,
           buildMode
         })
         .then(() => {

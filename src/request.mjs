@@ -1,36 +1,21 @@
-import { Utils } from "./utils.mjs";
+import { Utils } from './utils.mjs';
+import { extname } from 'path';
 
 const utils = new Utils();
 
 export default class Request {
-  constructor({ req, dirname, units, currentName, optional, buildMode, devServer }) {
-    this.mode = "request";
-
-    const path = {
-      fullPath: dirname + req.originalUrl,
-      filePath: null,
-      resPath: null,
-      resolvePath: null
-    };
-
-    const extension = utils.getExtension(req.path);
+  constructor ({ req, dirname, units, currentModule, optional, buildMode, devServer }) {
+    const fullPath = dirname + req.originalUrl;
+    const extension = extname(req.path);
     const match = req.path.match(/\/?[-\w]+\//g);
-    const module = match && match.length > 1 ? match[1].slice(0, -1) : currentName;
+    const module = match && match.length > 1 ? match[1].slice(0, -1) : currentModule;
+    const relativePath = fullPath.slice(fullPath.lastIndexOf(`/${module}/`) + module.length + 2);
 
-    this.fileName = path.fullPath.slice(path.fullPath.lastIndexOf(`/${module}/`) + module.length + 2);
-    path.filePath = `${dirname}/node_modules/${module}/${units.dir}/${this.fileName}`;
-    path.resPath = `${dirname}/node_modules/${module}/src/${this.fileName}`;
+    const resolvePath = ['.js', '.html'].includes(extension) ?
+      `${dirname}/node_modules/${module}/${units.dir}/${relativePath}` :
+      `${dirname}/node_modules/${module}/src/${relativePath}`;
 
-    if ([".js", ".html"].includes(extension)) {
-      path.resolvePath = path.filePath;
-    } else {
-      path.resolvePath = path.resPath;
-    }
-    const { filePath, resPath, resolvePath } = path;
-
-    if (module === currentName) {
-      this.mode = "currentModule";
-    }
+    this.mode = module === currentModule ? 'currentModule' : 'request';
 
     const source = [...optional.values()].find(e => e.module === module);
     if (!source) {
@@ -41,13 +26,14 @@ export default class Request {
       devServer,
       buildMode,
       source: this.error ? null : source.source,
-      redundantPaths: { resPath, filePath },
+      inputFile: `${dirname}/node_modules/${module}/src/${relativePath}`,
+      outputFile: resolvePath,
       resolvePath,
       module,
       dirname,
       units,
       optional,
-      moduleFileNameFull: resolvePath.slice(resolvePath.indexOf(units.dir) + units.dir.length)
+      relativePath
     };
   }
 }
