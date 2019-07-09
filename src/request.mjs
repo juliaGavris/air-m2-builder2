@@ -9,12 +9,11 @@ export default class Request {
     const extension = extname(req.path);
     const match = req.path.match(/\/?[-\w]+\//g);
     const module = match && match.length > 1 ? match[1].slice(0, -1) : currentModule;
-
-    this.relativePath = fullPath.slice(fullPath.lastIndexOf(`/${module}/`) + module.length + 2);
+    const relativePath = fullPath.slice(fullPath.lastIndexOf(`/${module}/`) + module.length + 2);
 
     const resolvePath = ['.js', '.html'].includes(extension) ?
-      `${dirname}/node_modules/${module}/${units.dir}/${this.relativePath}` :
-      `${dirname}/node_modules/${module}/src/${this.relativePath}`;
+      `${dirname}/node_modules/${module}/${units.dir}/${relativePath}` :
+      `${dirname}/node_modules/${module}/src/${relativePath}`;
 
     this.mode = module === currentModule ? 'currentModule' : 'request';
 
@@ -27,14 +26,14 @@ export default class Request {
       devServer,
       buildMode,
       source: this.error ? null : source.source,
-      inputFile: `${dirname}/node_modules/${module}/src/${this.relativePath}`,
+      inputFile: `${dirname}/node_modules/${module}/src/${relativePath}`,
       outputFile: resolvePath,
       resolvePath,
       module,
       dirname,
       units,
       optional,
-      moduleFileNameFull: this.relativePath
+      relativePath
     };
   }
 }

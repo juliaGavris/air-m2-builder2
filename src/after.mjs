@@ -29,8 +29,8 @@ export default function after ({ dirname, currentModule, units, optional, latenc
       const request = new Request({ req, dirname, units, currentModule, optional, execute, buildMode, devServer });
 
       const utils = new Utils();
-      const filePath = utils.removeQueryString(`${dirname}/src/${request.relativePath}`);
-      const opt = request.options;
+      const { module, relativePath, resolvePath } = request.options;
+      const filePath = utils.removeQueryString(`${dirname}/src/${relativePath}`);
 
       let i = 0;
       let match = null;
@@ -60,7 +60,7 @@ export default function after ({ dirname, currentModule, units, optional, latenc
           new CompileHtml({
             ...request.options,
             inputFile: filePath,
-            outputFile: utils.removeQueryString(opt.outputFile),
+            outputFile: utils.removeQueryString(resolvePath),
             importPathResolve
           })
             .run()
@@ -79,12 +79,12 @@ export default function after ({ dirname, currentModule, units, optional, latenc
       }
 
       requester
-        .get(opt)
+        .get(request.options)
         .then(() => {
-          return sendResolve({ source: utils.removeQueryString(opt.resolvePath), method: 'file', delay });
+          return sendResolve({ source: utils.removeQueryString(resolvePath), method: 'file', delay });
         })
         .catch(error => {
-          installer.deleteInstance(opt.module + opt.moduleFileNameFull);
+          installer.deleteInstance(`${module}/${relativePath}`);
           sendResolve({ source: error, method: 'data', delay });
         });
     });

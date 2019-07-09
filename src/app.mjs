@@ -32,27 +32,27 @@ export default class App {
     const install = new Install({ execute });
     this.installer = new Cache({ createInstance: opt => install.go(opt) });
     this.requester = new Cache({
-      createInstance: ({ module, resolvePath, moduleFileNameFull, ...options }) => {
+      createInstance: ({ module, resolvePath, relativePath, ...options }) => {
         return new Promise((res, rej) => {
           this.installer
-            .get({ module, resolvePath, moduleFileNameFull, ...options })
+            .get({ module, resolvePath, relativePath, ...options })
             .then(() => {
               access(resolvePath, constants.F_OK, err => {
-                this.requester.deleteInstance(module + moduleFileNameFull);
+                this.requester.deleteInstance(`${module}/${relativePath}`);
                 if (err) {
-                  this.installer.deleteInstance(module + moduleFileNameFull);
+                  this.installer.deleteInstance(`${module}/${relativePath}`);
                   this.installer
                     .get({
                       module,
                       resolvePath,
-                      moduleFileNameFull,
+                      relativePath,
                       ...options
                     })
                     .then(() => {
                       res();
                     })
                     .catch(() => {
-                      this.requester.deleteInstance(module + moduleFileNameFull);
+                      this.requester.deleteInstance(`${module}/${relativePath}`);
                       rej();
                     });
                 } else {
@@ -61,7 +61,7 @@ export default class App {
               });
             })
             .catch(() => {
-              this.requester.deleteInstance(module + moduleFileNameFull);
+              this.requester.deleteInstance(`${module}/${relativePath}`);
               rej();
             });
         });
