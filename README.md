@@ -23,9 +23,9 @@
 
 #### Параметры запуска
 
-- без параметров или `--dev-server:false` - запуск сборки
-- `--dev-server` или `--dev-server:true` - запуск отладочного сервера
-- `--build-mode:[production|development]` - режим сборки скриптов webpack
+- `--revision 111` - номер ревизии
+- `--dev-server` - запуск отладочного сервера
+- `--build-mode [production|development]` - режим сборки скриптов webpack
 
 ### Командная строка
 
