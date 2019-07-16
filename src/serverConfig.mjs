@@ -1,58 +1,38 @@
 import { existsSync, readFileSync } from 'fs';
-import path from 'path';
+import { basename, resolve } from 'path';
 import { Utils } from '../src/utils.mjs';
+import minimist from 'minimist';
 
 const utils = new Utils();
 
 const PORT = 9000;
 const BUILDER_NAME = 'air-m2-builder2';
 const PKG_REQUIRED_BY = '_requiredBy';
-let buildMode = null;
-let devServer = false;
 
 export default function serverConfig (options = {}) {
+
+  const argv = minimist(process.argv.slice(2), {
+    strings: ['build-mode'],
+    boolean: ['dev-server'],
+    default: {
+      'build-mode': 'development',
+      'dev-server': false
+    }
+  });
+
   if (!options.hasOwnProperty('customDir')) {
     options.customDir = false;
   }
 
   let entryUnit = 'master';
+  const dirname = options.customDir ? options.customDir : resolve('.');
+  const currentModule = basename(dirname);
+  const units = { dir: 'm2unit', requires: 'm2units', dirS: 'm2units' };
 
-  const dirname = options.customDir ? options.customDir : path.resolve(path.dirname(''));
-  const currentModule = dirname.match(/[-\w]+$/)[0];
-  const units = { dir: 'm2unit', requires: 'm2units' };
-  units.dirS = `${units.dir}s`;
+  const revision = process.env.STATIC_VERSION || argv.revision || null;
+  const devServer = argv['dev-server'];
 
-  let revision = null;
-  for (let i = 0; i < process.argv.length; i++) {
-    const arg = process.argv[i];
-    if (arg.indexOf('revision:') > -1) {
-      revision = arg.split(':')[1];
-      delete process.argv[i];
-    } else if (arg.match(/^--build-mode\b/) !== null) {
-      const mode = arg.split(':')[1];
-      if (!['production', 'development'].includes(mode)) {
-        throw `Error: Unknown '--build-mode' parameter '${mode}'. Only 'production' and 'development' accepted.`;
-      }
-      buildMode = mode;
-    } else if (arg.match(/^--dev-server\b/) !== null) {
-      const dev = arg.split(':')[1];
-      if (dev === undefined) {
-        devServer = true;
-      } else if (!['true', 'false'].includes(dev)) {
-        throw `Error: Unknown '--build-mode' parameter '${dev}'. Only 'true' and 'false' accepted.`;
-      } else {
-        devServer = JSON.parse(dev);
-      }
-    }
-  }
-
-  if (buildMode === null) {
-    buildMode = devServer ? 'development' : 'production';
-  }
-
-  if (process.env.hasOwnProperty('STATIC_VERSION')) {
-    revision = process.env.STATIC_VERSION;
-  }
+  let buildMode = !devServer && ['production', 'development'].includes(argv['build-mode']) ? argv['build-mode'] : 'development';
 
   const gameConfigFilename = 'air-m2.config.json';
   const gameConfigPath = `${dirname}/${gameConfigFilename}`;
