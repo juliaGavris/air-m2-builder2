@@ -6,18 +6,19 @@ import csstree from 'css-tree';
 
 export default class CompileSass {
   constructor ({ htmlText, filePath }) {
-    const reg = `(?<=<style[a-z0-9="' ]*type\\s*=\\s*["']?\\s*text\\/scss\\s*["']?[a-z0-9="' ]*>)([\\s\\S]*?)(?=<\\/style>)`;
     this.filePath = filePath;
-    this.scss = (htmlText.match(new RegExp(reg, 'gi')) || []).reduce((acc, style, i) => {
-      acc.push({
-        cssIndex: i,
-        data: this.processImports(style),
-        idx: htmlText.indexOf(style),
-        len: style.length
-      });
-      return acc;
-    }, []);
     this.css = [];
+    this.scss = [];
+    const regex = new RegExp(`(?<=<style[a-z0-9="' ]*type\\s*=\\s*["']?\\s*text\\/scss\\s*["']?[a-z0-9="' ]*>)([\\s\\S]*?)(?=<\\/style>)`,'gi');
+    let match = null;
+    while ((match = regex.exec(htmlText))) {
+      this.scss.push({
+        cssIndex: this.scss.length,
+        data: this.processImports(match[0]),
+        idx: match.index,
+        len: match[0].length
+      })
+    }
   }
 
   processImports (scss) {
