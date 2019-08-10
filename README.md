@@ -72,3 +72,12 @@ STATIC_VERSION
 
 ## Supported local's vars
 --revision:<build-number>
+
+## debug вложения
+
+Вкрапления для отладки:
+``` 
+/*<@debug>*/
+код для отладки в production
+/*</@debug>*/
+```
