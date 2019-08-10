@@ -15,10 +15,17 @@ export default function serverConfig (options = {}) {
     strings: ['build-mode'],
     boolean: ['dev-server'],
     default: {
-      'build-mode': 'development',
+      'build-mode': "",
       'dev-server': false
     }
   });
+  
+  const devServer = argv['dev-server'];
+  const buildMode = argv['build-mode'] || argv['dev-server'] === true && "development" || "production";
+
+  if(!["production", "development"].includes(buildMode)) {
+    throw `unsupported build mode type: ${buildMode}`
+  }
 
   if (!options.hasOwnProperty('customDir')) {
     options.customDir = false;
@@ -30,9 +37,6 @@ export default function serverConfig (options = {}) {
   const units = { dir: 'm2unit', requires: 'm2units', dirS: 'm2units' };
 
   const revision = process.env.STATIC_VERSION || argv.revision || null;
-  const devServer = argv['dev-server'];
-  const buildMode = !devServer && ['production', 'development'].includes(argv['build-mode']) ? argv['build-mode'] : 'development';
-
   const gameConfigFilename = 'air-m2.config.json';
   const gameConfigPath = `${dirname}/${gameConfigFilename}`;
   let port = PORT;
