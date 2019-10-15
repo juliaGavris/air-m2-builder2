@@ -77,10 +77,23 @@ class CompileHtml {
       this.htmlText,
       '(?<=<script>)([\\s\\S]*?)(?=<\\/script>)',
       '(?<=<view-source>)([\\s\\S]*?)(?=<\\/view-source>)',
-      '(?<=<stream-source>)([\\s\\S]*?)(?=<\\/stream-source>)',
-      '(?<=<react-source>)([\\s\\S]*?)(?=<\\/react-source>)'
+      '(?<=<stream-source>)([\\s\\S]*?)(?=<\\/stream-source>)'
     );
 
+    const jsxSources = ((text, ...regexp) => {
+      const js = [];
+      regexp.forEach(reg => {
+        const match = text.match(new RegExp(reg, 'gi'));
+        if (match !== null) {
+          js.push(...match);
+        }
+      });
+
+      return js;
+    })(
+      this.htmlText,
+      '(?<=<react-source>)([\\s\\S]*?)(?=<\\/react-source>)'
+    );
 
     const {
       configs,
@@ -88,7 +101,6 @@ class CompileHtml {
     } = this.config;
     if (jsSources !== null) {
       jsSources.forEach((data, i) => {
-        console.log(data)
         const hash = crypto.createHash('md5').update(data).digest('hex');
         const filename = `.tmp-${hash}.js`;
         const filenameBundle = `.tmp-${hash}-bundle.js`;
@@ -118,6 +130,39 @@ class CompileHtml {
         configs.push(webpackCompileConfig(compileOpt));
       });
     }
+
+    if (jsxSources !== null) {
+      jsxSources.forEach((data, i) => {
+        const hash = crypto.createHash('md5').update(data).digest('hex');
+        const filename = `.tmp-${hash}.jsx`;
+        const filenameBundle = `.tmp-${hash}-bundle.js`;
+
+        if (!fs.existsSync(this.buildDir)) {
+          fs.mkdirSync(this.buildDir, { recursive: true });
+        }
+
+        scripts.push({
+          file: `${this.buildDir}/${filenameBundle}`,
+          idx: this.htmlText.indexOf(data),
+          len: data.length
+        });
+
+        if (importPathResolve) {
+          data = importPathResolve(data);
+        }
+
+        fs.writeFileSync(`${this.buildDir}/${filename}`, data, 'utf8');
+        const compileOpt = {
+          buildMode,
+          path: normalize(this.buildDir),
+          entry: `${this.buildDir}/${filename}`,
+          filename: filenameBundle,
+        };
+
+        configs.push(webpackCompileConfig(compileOpt));
+      });
+    }
+
   }
 
   run () {

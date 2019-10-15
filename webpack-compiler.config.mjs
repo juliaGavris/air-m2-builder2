@@ -14,7 +14,7 @@ export default ({ entry, path, filename, buildMode, resolve = null }) => {
   obj.module = {
     rules: [
       {
-        test: /\.js[x]*$/,
+        test: /\.jsx$/,
         use: [
           {
             loader: 'babel-loader',
@@ -23,7 +23,18 @@ export default ({ entry, path, filename, buildMode, resolve = null }) => {
             }
           }
         ]
-      }
+      },
+      {
+        test: /\.s[ac]ss$/i,
+        use: [
+          // Creates `style` nodes from JS strings
+          'style-loader',
+          // Translates CSS into CommonJS
+          'css-loader',
+          // Compiles Sass to CSS
+          'sass-loader',
+        ],
+      },
     ]
   };
 
