@@ -29,6 +29,22 @@ module.exports = (buildMode, devServer, dirname, { masterPath, entryUnit, revisi
     ]
   };
 
+  obj.module = {
+    rules: [
+      {
+        test: /\.js[x]*$/,
+        use: [
+          {
+            loader: 'babel-loader',
+            options: {
+              presets: ['@babel/preset-react']
+            }
+          }
+        ]
+      }
+    ]
+  };
+
   if (buildMode === 'production') {
     obj.entry.push(`${__dirname}/src/babel-polyfill.js`);
     obj.module = {

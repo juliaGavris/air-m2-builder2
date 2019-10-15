@@ -11,6 +11,22 @@ export default ({ entry, path, filename, buildMode, resolve = null }) => {
     }
   };
 
+  obj.module = {
+    rules: [
+      {
+        test: /\.js[x]*$/,
+        use: [
+          {
+            loader: 'babel-loader',
+            options: {
+              presets: ['@babel/preset-react']
+            }
+          }
+        ]
+      }
+    ]
+  };
+
   if (buildMode === 'production') {
     obj.module = {
       rules: [

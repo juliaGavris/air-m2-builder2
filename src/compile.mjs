@@ -77,8 +77,10 @@ class CompileHtml {
       this.htmlText,
       '(?<=<script>)([\\s\\S]*?)(?=<\\/script>)',
       '(?<=<view-source>)([\\s\\S]*?)(?=<\\/view-source>)',
-      '(?<=<stream-source>)([\\s\\S]*?)(?=<\\/stream-source>)'
+      '(?<=<stream-source>)([\\s\\S]*?)(?=<\\/stream-source>)',
+      '(?<=<react-source>)([\\s\\S]*?)(?=<\\/react-source>)'
     );
+
 
     const {
       configs,
@@ -86,6 +88,7 @@ class CompileHtml {
     } = this.config;
     if (jsSources !== null) {
       jsSources.forEach((data, i) => {
+        console.log(data)
         const hash = crypto.createHash('md5').update(data).digest('hex');
         const filename = `.tmp-${hash}.js`;
         const filenameBundle = `.tmp-${hash}-bundle.js`;
@@ -163,10 +166,12 @@ class CompileHtml {
           .replace(/\s*type\s*=\s*["']?\s*text\/scss\s*["']?\s*/g, ' ')
           .replace(/<view-source>/gi, '<script data-source-type="view-source">')
           .replace(/<\/view-source>/gi, '</script>')
+          .replace(/<react-source>/gi, '<script data-source-type="view-source">')
+          .replace(/<\/react-source>/gi, '</script>')
           .replace(/<stream-source>/gi, '<script data-source-type="stream-source">')
           .replace(/<\/stream-source>/gi, '</script>');
 
-        glob(`${this.buildDir}/.tmp*.js`, {}, (err, files) => {
+        glob(`${this.buildDir}/.tmp*.js*`, {}, (err, files) => {
           if (err) throw err;
           files.map(file => fs.unlink(file, () => {}));
         });
