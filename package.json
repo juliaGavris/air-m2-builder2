@@ -21,6 +21,7 @@
   "dependencies": {
     "@babel/core": "^7.3.4",
     "@babel/preset-env": "^7.3.4",
+    "@babel/preset-react": "^7.6.3",
     "@babel/runtime": "^7.4.5",
     "autoprefixer": "^9.5.1",
     "babel-loader": "^8.0.5",
@@ -35,6 +36,8 @@
     "mocha": "^6.0.2",
     "path": "^0.12.7",
     "postcss": "^7.0.16",
+    "react": "^16.10.2",
+    "react-dom": "^16.10.2",
     "webpack": "^4.29.5",
     "webpack-cli": "^3.2.3",
     "webpack-dev-server": "^3.2.1"

@@ -29,39 +29,52 @@ module.exports = (buildMode, devServer, dirname, { masterPath, entryUnit, revisi
     ]
   };
 
+  obj.module = {
+    rules: [
+      {
+        test: /\.jsx$/,
+        use: [
+          {
+            loader: 'babel-loader',
+            options: {
+              presets: ['@babel/preset-react']
+            }
+          }
+        ]
+      }
+    ]
+  };
+
   if (buildMode === 'production') {
     obj.entry.push(`${__dirname}/src/babel-polyfill.js`);
-    obj.module = {
-      rules: [
-        {
-          test: /\.m?js$/,
-          use: [
-            {
-              loader: 'air-m2-builder2/src/webpack-strip-block.js',
-              options: {
-                start: '<@debug>',
-                end: '</@debug>'
-              }
-            },
-            {
-              loader: 'babel-loader',
-              options: {
-                presets: [
-                  [
-                    '@babel/preset-env',
-                    {
-                      targets: {
-                        browsers: ['last 2 versions', 'ie >= 8']
-                      }
-                    }
-                  ]
-                ]
-              }
+    obj.module.rules.push({
+        test: /\.m?js$/,
+        use: [
+          {
+            loader: 'air-m2-builder2/src/webpack-strip-block.js',
+            options: {
+              start: '<@debug>',
+              end: '</@debug>'
             }
-          ]
-        }
-      ]
-    };
+          },
+          {
+            loader: 'babel-loader',
+            options: {
+              presets: [
+                [
+                  '@babel/preset-env',
+                  {
+                    targets: {
+                      browsers: ['last 2 versions', 'ie >= 8']
+                    }
+                  }
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    );
   }
 
   return obj;
