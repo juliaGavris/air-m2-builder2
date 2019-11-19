@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync, statSync } from 'fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'fs';
 import path from 'path';
 import copyfiles from 'copyfiles';
 import { exec } from 'child_process';
@@ -18,6 +18,14 @@ class Utils {
       optDep = JSON.parse(readFileSync(filename, 'utf8'));
     }
     return optDep == null ? optDep : Object.keys(optDep).map(key => ({ module: key, source: optDep[key] }));
+  }
+
+  getFrom (filename) {
+    if (existsSync(filename)) {
+      return JSON.parse(readFileSync(filename, 'utf8'))['_from'];
+    } else {
+      return false;
+    }
   }
 
   addUnique (opt, add) {

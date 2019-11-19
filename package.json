@@ -43,6 +43,7 @@
     "webpack-dev-server": "^3.2.1"
   },
   "devDependencies": {
-    "minimist": "^1.2.0"
+    "minimist": "^1.2.0",
+    "rimraf": "^3.0.0"
   }
 }

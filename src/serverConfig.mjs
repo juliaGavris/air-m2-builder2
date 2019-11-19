@@ -1,7 +1,8 @@
 import { existsSync, readFileSync } from 'fs';
-import { basename, resolve, join } from 'path';
+import { basename, join, resolve } from 'path';
 import { Utils } from '../src/utils.mjs';
 import minimist from 'minimist';
+import rimraf from 'rimraf';
 
 const utils = new Utils();
 
@@ -14,7 +15,7 @@ export default function serverConfig (options = {}) {
     strings: ['build-mode', 'm2units'],
     boolean: ['dev-server'],
     default: {
-      'build-mode': "",
+      'build-mode': '',
       'dev-server': false,
       'm2units': units.requires
     }
@@ -22,10 +23,10 @@ export default function serverConfig (options = {}) {
 
   const m2units = argv['m2units'];
   const devServer = argv['dev-server'];
-  const buildMode = argv['build-mode'] || argv['dev-server'] === true && "development" || "production";
+  const buildMode = argv['build-mode'] || argv['dev-server'] === true && 'development' || 'production';
 
-  if(!["production", "development"].includes(buildMode)) {
-    throw `unsupported build mode type: ${buildMode}`
+  if (!['production', 'development'].includes(buildMode)) {
+    throw `unsupported build mode type: ${buildMode}`;
   }
 
   if (!options.hasOwnProperty('customDir')) {
@@ -75,6 +76,16 @@ export default function serverConfig (options = {}) {
     if (additionals != null) {
       utils.addUnique(optional, additionals);
     }
+  }
+
+  if (buildMode === 'development') {
+    optional.forEach(({ module, source }) => {
+      const pkgjsonPath = `${dirname}/node_modules/${module}/package.json`;
+      if (source !== utils.getFrom(pkgjsonPath)) {
+        console.log(`Removing wrong dep ${module}...`);
+        rimraf.sync(`${dirname}/node_modules/${module}`);
+      }
+    });
   }
 
   const libPath = existsSync(`${dirname}/lib`) ? '/lib' : '/src';
