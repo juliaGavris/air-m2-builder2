@@ -39,7 +39,6 @@ export default class DevServer {
   run () {
     const {
       dirname,
-      master,
       units,
       currentModule,
       optional,
@@ -56,7 +55,7 @@ export default class DevServer {
       headers: { 'Access-Control-Allow-Origin': '*' },
       disableHostCheck: true,
       stats: { colors: true },
-      contentBase: [`${dirname}/node_modules/${master}/dist`, `${dirname}/src`],
+      contentBase: [`${dirname}/dist`],
       publicPath: `/${units.dirS}/`,
       hot: true,
       inline: true,

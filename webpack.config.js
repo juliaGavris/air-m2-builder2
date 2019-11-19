@@ -1,14 +1,14 @@
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 
-module.exports = (buildMode, devServer, dirname, { masterPath, entryUnit, revision = null }) => {
+module.exports = (buildMode, devServer, dirname, { m2path, entryUnit, revision = null }) => {
   const obj = {
     mode: buildMode,
-    entry: [`${__dirname}/src/m2.js`, masterPath.join('')],
+    entry: [`${__dirname}/src/m2.js`, m2path],
     externals: {
       m2: '__M2'
     },
     output: {
-      path: `${devServer ? masterPath[0] : dirname}/dist`,
+      path: `${dirname}/dist`,
       filename: 'm2.js'
     },
     plugins: [
@@ -16,7 +16,7 @@ module.exports = (buildMode, devServer, dirname, { masterPath, entryUnit, revisi
         entryUnit,
         inject: false,
         hash: true,
-        template: masterPath.join('').replace(/\.js$/g, '.html'),
+        template: m2path.replace(/\.js$/g, '.html'),
         filename: 'index.html',
         revision,
         buildMode,
