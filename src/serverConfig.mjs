@@ -89,9 +89,9 @@ export default function serverConfig (options = {}) {
   if (libPath.indexOf('src') > -1) {
     console.warn('Deprecated lib path, use `lib/`');
   }
-  const m2path = join(dirname, libPath, 'm2.js');
+  const m2path = join(dirname, libPath);
 
-  if (!existsSync(m2path)) {
+  if (!existsSync(`${m2path}/m2.js`)) {
     throw `Error: Cannot find 'm2.js' on source '${m2path}'`;
   }
 

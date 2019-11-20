@@ -1,9 +1,10 @@
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const CopyPlugin = require('copy-webpack-plugin');
 
 module.exports = (buildMode, devServer, dirname, { m2path, entryUnit, revision = null }) => {
   const obj = {
     mode: buildMode,
-    entry: [`${__dirname}/src/m2.js`, m2path],
+    entry: [`${__dirname}/src/m2.js`, `${m2path}/m2.js`],
     externals: {
       m2: '__M2'
     },
@@ -12,11 +13,14 @@ module.exports = (buildMode, devServer, dirname, { m2path, entryUnit, revision =
       filename: 'm2.js'
     },
     plugins: [
+      new CopyPlugin([
+        { from: `${m2path}/res`, to: `${dirname}/dist/res` },
+      ]),
       new HtmlWebpackPlugin({
         entryUnit,
         inject: false,
         hash: true,
-        template: m2path.replace(/\.js$/g, '.html'),
+        template: `${m2path}/m2.html`,
         filename: 'index.html',
         revision,
         buildMode,
