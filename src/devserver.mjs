@@ -55,7 +55,7 @@ export default class DevServer {
       headers: { 'Access-Control-Allow-Origin': '*' },
       disableHostCheck: true,
       stats: { colors: true },
-      contentBase: [`${dirname}/dist`],
+      contentBase: [`${dirname}/dist`, `${dirname}/src`],
       publicPath: `/${units.dirS}/`,
       hot: true,
       inline: true,
