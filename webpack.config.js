@@ -1,5 +1,6 @@
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CopyPlugin = require('copy-webpack-plugin');
+const fs = require('fs');
 
 module.exports = (buildMode, devServer, dirname, { m2path, entryUnit, revision = null }) => {
   const obj = {
@@ -13,9 +14,6 @@ module.exports = (buildMode, devServer, dirname, { m2path, entryUnit, revision =
       filename: 'm2.js'
     },
     plugins: [
-      new CopyPlugin([
-        { from: `${m2path}/res`, to: `${dirname}/dist/res` },
-      ]),
       new HtmlWebpackPlugin({
         entryUnit,
         inject: false,
@@ -32,6 +30,12 @@ module.exports = (buildMode, devServer, dirname, { m2path, entryUnit, revision =
       })
     ]
   };
+
+  if (fs.existsSync(`${m2path}/res`)) {
+    obj.plugins.push( new CopyPlugin([
+      { from: `${m2path}/res`, to: `${dirname}/dist/res` },
+    ]))
+  }
 
   obj.module = {
     rules: [
