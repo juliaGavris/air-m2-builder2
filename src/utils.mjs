@@ -83,6 +83,21 @@ class Utils {
     return filelist;
   }
 
+  importPathResolve (filePath) {
+    return (data) => {
+      const regex = /import\s(?:["'\s]*[\w*{}\$\n\r\t, ]+from\s*)?["'\s]*([^"']+)["'\s]/gm;
+      const sourceDir = path.dirname(filePath);
+      return data.replace(regex, (match, importPath) => {
+        let res = match;
+        if (~importPath.indexOf('./')) {
+          res = match.replace(importPath, path.resolve(`${sourceDir}/${importPath}`));
+          res = res.replace(/\\/g, '/');
+        }
+        return res;
+      });
+    }
+  };
+
   prodCopyCompile ({ from, to, buildMode }) {
     return new Promise((resolve, reject) => {
       this.copyFiles({
@@ -98,7 +113,8 @@ class Utils {
             const compileOpt = {
               buildMode,
               inputFile: file,
-              outputFile: `${to}/${file.substring(from.replace('/**/*', '').length)}`
+              outputFile: `${to}/${file.substring(from.replace('/**/*', '').length)}`,
+              importPathResolve: this.importPathResolve(file)
             };
             promises.push(new CompileHtml(compileOpt).run());
           });

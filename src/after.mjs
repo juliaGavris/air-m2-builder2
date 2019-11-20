@@ -61,7 +61,7 @@ export default function after ({ dirname, currentModule, units, optional, latenc
             ...request.options,
             inputFile: filePath,
             outputFile: utils.removeQueryString(resolvePath),
-            importPathResolve
+            importPathResolve: utils.importPathResolve(filePath)
           })
             .run()
             .then(htmlText => {
