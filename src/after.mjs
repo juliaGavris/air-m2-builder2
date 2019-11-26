@@ -2,8 +2,10 @@ import Request from './request.mjs';
 import { CompileHtml } from './compile.mjs';
 import { Utils } from './utils.mjs';
 import path from 'path';
+import fs from "fs";
+import crypto from "crypto";
 
-export default function after ({ dirname, currentModule, units, optional, latency, app: { requester, installer }, execute, devServer, buildMode }) {
+export default function after ({ dirname, module, currentModule, units, optional, latency, app: { requester, installer }, execute, devServer, buildMode }) {
   return function (app) {
     app.get(`/${units.dirS}/*`, (req, res) => {
       function sendResolve ({ source, method, delay }) {
@@ -57,16 +59,30 @@ export default function after ({ dirname, currentModule, units, optional, latenc
             });
           };
 
-          new CompileHtml({
-            ...request.options,
-            inputFile: filePath,
-            outputFile: utils.removeQueryString(resolvePath),
-            importPathResolve: utils.importPathResolve(filePath)
-          })
-            .run()
-            .then(htmlText => {
-              sendResolve({ source: htmlText, method: 'data', delay });
-            });
+          const outputFile = utils.removeQueryString(resolvePath);
+
+          const data = fs.readFileSync(filePath);
+          const hash = crypto.createHash('md5').update(data).digest('hex');
+          const cacheDir = `${dirname}/node_modules/${module}/cache/`;
+          const cachedPath = `${cacheDir}${hash}.html`;
+          if (fs.existsSync(cachedPath)) {
+            sendResolve({ source: fs.readFileSync(cachedPath), method: 'data', delay });
+          } else {
+            new CompileHtml({
+              ...request.options,
+              inputFile: filePath,
+              outputFile,
+              importPathResolve: utils.importPathResolve(filePath)
+            })
+              .run()
+              .then(htmlText => {
+                if (!fs.existsSync(cacheDir)) {
+                  fs.mkdirSync(cacheDir)
+                }
+                fs.writeFileSync(cachedPath, htmlText)
+                sendResolve({ source: htmlText, method: 'data', delay });
+              });
+          }
         } else {
           sendResolve({ source: filePath, method: 'file', delay });
         }
