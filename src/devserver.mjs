@@ -6,6 +6,7 @@ import WebpackDevServer from 'webpack-dev-server';
 import App from '../src/app.mjs';
 import BuildProd from '../src/buildprod.mjs';
 import after from '../src/after.mjs';
+import rimraf from 'rimraf';
 
 export default class DevServer {
   constructor (options) {
@@ -39,7 +40,6 @@ export default class DevServer {
   run () {
     const {
       dirname,
-      master,
       units,
       currentModule,
       optional,
@@ -52,11 +52,13 @@ export default class DevServer {
 
     const app = new App({ execute });
 
+    rimraf.sync(`${dirname}/node_modules/${currentModule}/cache/`);
+
     const server = new WebpackDevServer(this.compiler, {
       headers: { 'Access-Control-Allow-Origin': '*' },
       disableHostCheck: true,
       stats: { colors: true },
-      contentBase: [`${dirname}/node_modules/${master}/dist`, `${dirname}/src`],
+      contentBase: [`${dirname}/dist`, `${dirname}/src`],
       publicPath: `/${units.dirS}/`,
       hot: true,
       inline: true,

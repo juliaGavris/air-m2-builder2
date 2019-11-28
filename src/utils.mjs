@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync, statSync } from 'fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'fs';
 import path from 'path';
 import copyfiles from 'copyfiles';
 import { exec } from 'child_process';
@@ -18,6 +18,14 @@ class Utils {
       optDep = JSON.parse(readFileSync(filename, 'utf8'));
     }
     return optDep == null ? optDep : Object.keys(optDep).map(key => ({ module: key, source: optDep[key] }));
+  }
+
+  getFrom (filename) {
+    if (existsSync(filename)) {
+      return JSON.parse(readFileSync(filename, 'utf8'))['_from'];
+    } else {
+      return false;
+    }
   }
 
   addUnique (opt, add) {
@@ -75,6 +83,21 @@ class Utils {
     return filelist;
   }
 
+  importPathResolve (filePath) {
+    return (data) => {
+      const regex = /import\s(?:["'\s]*[\w*{}\$\n\r\t, ]+from\s*)?["'\s]*([^"']+)["'\s]/gm;
+      const sourceDir = path.dirname(filePath);
+      return data.replace(regex, (match, importPath) => {
+        let res = match;
+        if (~importPath.indexOf('./')) {
+          res = match.replace(importPath, path.resolve(`${sourceDir}/${importPath}`));
+          res = res.replace(/\\/g, '/');
+        }
+        return res;
+      });
+    }
+  };
+
   prodCopyCompile ({ from, to, buildMode }) {
     return new Promise((resolve, reject) => {
       this.copyFiles({
@@ -90,7 +113,8 @@ class Utils {
             const compileOpt = {
               buildMode,
               inputFile: file,
-              outputFile: `${to}/${file.substring(from.replace('/**/*', '').length)}`
+              outputFile: `${to}/${file.substring(from.replace('/**/*', '').length)}`,
+              importPathResolve: this.importPathResolve(file)
             };
             promises.push(new CompileHtml(compileOpt).run());
           });

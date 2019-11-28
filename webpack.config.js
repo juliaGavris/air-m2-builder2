@@ -1,14 +1,16 @@
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const CopyPlugin = require('copy-webpack-plugin');
+const fs = require('fs');
 
-module.exports = (buildMode, devServer, dirname, { masterPath, entryUnit, revision = null }) => {
+module.exports = (buildMode, devServer, dirname, { m2path, entryUnit, revision = null }) => {
   const obj = {
     mode: buildMode,
-    entry: [`${__dirname}/src/m2.js`, masterPath.join('')],
+    entry: [`${__dirname}/src/m2.js`, `${m2path}/m2.js`],
     externals: {
       m2: '__M2'
     },
     output: {
-      path: `${devServer ? masterPath[0] : dirname}/dist`,
+      path: `${dirname}/dist`,
       filename: 'm2.js'
     },
     plugins: [
@@ -16,7 +18,7 @@ module.exports = (buildMode, devServer, dirname, { masterPath, entryUnit, revisi
         entryUnit,
         inject: false,
         hash: true,
-        template: masterPath.join('').replace(/\.js$/g, '.html'),
+        template: `${m2path}/m2.html`,
         filename: 'index.html',
         revision,
         buildMode,
@@ -28,6 +30,12 @@ module.exports = (buildMode, devServer, dirname, { masterPath, entryUnit, revisi
       })
     ]
   };
+
+  if (fs.existsSync(`${m2path}/res`)) {
+    obj.plugins.push( new CopyPlugin([
+      { from: `${m2path}/res`, to: `${dirname}/dist/res` },
+    ]))
+  }
 
   obj.module = {
     rules: [

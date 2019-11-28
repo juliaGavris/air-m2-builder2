@@ -9,7 +9,7 @@ export default class CompileSass {
     this.filePath = filePath;
     this.css = [];
     this.scss = [];
-    const regex = new RegExp(`(?<=<style[a-z0-9="' ]*type\\s*=\\s*["']?\\s*text\\/scss\\s*["']?[a-z0-9="' ]*>)([\\s\\S]*?)(?=<\\/style>)`,'gi');
+    const regex = new RegExp(`(?<=<style[a-z0-9="' ]*type\\s*=\\s*["']?\\s*text\\/scss\\s*["']?[a-z0-9="' ]*>)([\\s\\S]*?)(?=<\\/style>)`, 'gi');
     let match = null;
     while ((match = regex.exec(htmlText))) {
       this.scss.push({
@@ -17,7 +17,7 @@ export default class CompileSass {
         data: this.processImports(match[0]),
         idx: match.index,
         len: match[0].length
-      })
+      });
     }
   }
 
@@ -47,6 +47,21 @@ export default class CompileSass {
     });
   }
 
+  processResources (css) {
+    const ast = csstree.parse(css);
+
+    csstree.walk(ast, function (node) {
+      if ((this.rule || this.atrule && this.atrule.name === 'media') && node.type === 'Url') {
+        let url = (node.value.type === 'Raw' ? node.value.value : node.value.value.substr(1, node.value.value.length - 2));
+        if (url.indexOf('data:') === -1) {
+          node.value.value = `/* <image url="${url}"> */`;
+        }
+      }
+    });
+
+    return csstree.generate(ast);
+  }
+
   compile () {
     const promises = [];
     this.scss.forEach(({ data }, i) => {
@@ -62,6 +77,7 @@ export default class CompileSass {
                 .process(result.css.toString(), { from: undefined })
                 .then(({ css }) => {
                   this.css[i] = this.processPath(css);
+                  this.css[i] = this.processResources(this.css[i]);
                   res();
                 });
             }

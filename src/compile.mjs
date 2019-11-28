@@ -99,68 +99,43 @@ class CompileHtml {
       configs,
       scripts,
     } = this.config;
-    if (jsSources !== null) {
-      jsSources.forEach((data, i) => {
-        const hash = crypto.createHash('md5').update(data).digest('hex');
-        const filename = `.tmp-${hash}.js`;
-        const filenameBundle = `.tmp-${hash}-bundle.js`;
 
-        if (!fs.existsSync(this.buildDir)) {
-          fs.mkdirSync(this.buildDir, { recursive: true });
-        }
+    const prepareSource = ({ data, ext }) => {
+      const hash = crypto.createHash('md5').update(data).digest('hex');
+      const filename = `.tmp-${hash}.${ext}`;
+      const filenameBundle = `.tmp-${hash}-bundle.js`;
 
-        scripts.push({
-          file: `${this.buildDir}/${filenameBundle}`,
-          idx: this.htmlText.indexOf(data),
-          len: data.length
-        });
+      if (!fs.existsSync(this.buildDir)) {
+        fs.mkdirSync(this.buildDir, { recursive: true });
+      }
 
-        if (importPathResolve) {
-          data = importPathResolve(data);
-        }
-
-        fs.writeFileSync(`${this.buildDir}/${filename}`, data, 'utf8');
-        const compileOpt = {
-          buildMode,
-          path: normalize(this.buildDir),
-          entry: `${this.buildDir}/${filename}`,
-          filename: filenameBundle,
-        };
-
-        configs.push(webpackCompileConfig(compileOpt));
+      scripts.push({
+        file: `${this.buildDir}/${filenameBundle}`,
+        idx: this.htmlText.indexOf(data),
+        len: data.length
       });
+
+      if (importPathResolve) {
+        data = importPathResolve(data);
+      }
+
+      fs.writeFileSync(`${this.buildDir}/${filename}`, data, 'utf8');
+      const compileOpt = {
+        buildMode,
+        path: normalize(this.buildDir),
+        entry: `${this.buildDir}/${filename}`,
+        filename: filenameBundle,
+      };
+
+      configs.push(webpackCompileConfig(compileOpt));
+    };
+
+    if (jsSources !== null) {
+      jsSources.forEach((data) => prepareSource({ data, ext: 'js'}));
     }
 
     if (jsxSources !== null) {
-      jsxSources.forEach((data, i) => {
-        const hash = crypto.createHash('md5').update(data).digest('hex');
-        const filename = `.tmp-${hash}.jsx`;
-        const filenameBundle = `.tmp-${hash}-bundle.js`;
-
-        if (!fs.existsSync(this.buildDir)) {
-          fs.mkdirSync(this.buildDir, { recursive: true });
-        }
-
-        scripts.push({
-          file: `${this.buildDir}/${filenameBundle}`,
-          idx: this.htmlText.indexOf(data),
-          len: data.length
-        });
-
-        if (importPathResolve) {
-          data = importPathResolve(data);
-        }
-
-        fs.writeFileSync(`${this.buildDir}/${filename}`, data, 'utf8');
-        const compileOpt = {
-          buildMode,
-          path: normalize(this.buildDir),
-          entry: `${this.buildDir}/${filename}`,
-          filename: filenameBundle,
-        };
-
-        configs.push(webpackCompileConfig(compileOpt));
-      });
+      jsxSources.forEach((data) => prepareSource({ data, ext: 'jsx'}));
     }
 
   }
