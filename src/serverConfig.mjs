@@ -78,7 +78,7 @@ export default function serverConfig (options = {}) {
   if (buildMode === 'development') {
     optional.forEach(({ module, source }) => {
       const pkgjsonPath = `${dirname}/node_modules/${module}/package.json`;
-      if (source !== utils.getFrom(pkgjsonPath)) {
+      if (utils.getFrom(pkgjsonPath) && source !== utils.getFrom(pkgjsonPath)) {
         console.log(`Removing wrong dep ${module}...`);
         rimraf.sync(`${dirname}/node_modules/${module}`);
       }
