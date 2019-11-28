@@ -47,7 +47,7 @@ export default function after ({ dirname, module, currentModule, units, optional
       if (request.mode === 'currentModule') {
         if (path.extname(filePath) === '.html') {
           const importPathResolve = (data) => {
-            const regex = /import\s(?:["'\s]*[\w*{}\$\n\r\t, ]+from\s*)?["'\s]*([^"']+)["'\s]/gm;
+            const regex = /(?:import|export)\s(?:["'\s]*[\w*{}\$\n\r\t, ]+from\s*)?["'\s]*([^"']+)["'\s]/gm;
             const sourceDir = path.dirname(filePath);
             return data.replace(regex, (match, importPath) => {
               let res = match;
