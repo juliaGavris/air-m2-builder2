@@ -37,8 +37,6 @@
     "mocha": "^6.0.2",
     "path": "^0.12.7",
     "postcss": "^7.0.16",
-    "react": "^16.10.2",
-    "react-dom": "^16.10.2",
     "webpack": "^4.29.5",
     "webpack-cli": "^3.2.3",
     "webpack-dev-server": "^3.2.1"
