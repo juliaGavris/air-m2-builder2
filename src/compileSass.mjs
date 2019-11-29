@@ -3,9 +3,12 @@ import path from 'path';
 import postcss from 'postcss';
 import autoprefixer from 'autoprefixer';
 import csstree from 'css-tree';
+import crypto from 'crypto';
+import fs from 'fs';
 
 export default class CompileSass {
-  constructor ({ htmlText, filePath }) {
+  constructor ({ htmlText, filePath, cacheDir }) {
+    this.cacheDir = cacheDir;
     this.filePath = filePath;
     this.css = [];
     this.scss = [];
@@ -65,23 +68,38 @@ export default class CompileSass {
   compile () {
     const promises = [];
     this.scss.forEach(({ data }, i) => {
+      const hash = crypto.createHash('md5').update(data).digest('hex');
+      const cachedPath = `${this.cacheDir}${hash}.css`;
       promises.push(
         new Promise(res => {
-          sass.render({ data }, (err, result) => {
-            if (err) {
-              console.log(`Sass compile error:\n${err}`);
-              this.css[i] = this.scss[i].data;
-              res();
-            } else {
-              postcss([autoprefixer])
-                .process(result.css.toString(), { from: undefined })
-                .then(({ css }) => {
-                  this.css[i] = this.processPath(css);
-                  this.css[i] = this.processResources(this.css[i]);
-                  res();
-                });
-            }
-          });
+          if (this.cacheDir && fs.existsSync(cachedPath)) {
+            fs.readFile(cachedPath, (err, data) => {
+              if (err) {
+                throw err
+              }
+              this.css[i] = data;
+              res()
+            });
+          } else {
+            sass.render({ data }, (err, result) => {
+              if (err) {
+                console.log(`Sass compile error:\n${err}`);
+                this.css[i] = this.scss[i].data;
+                res();
+              } else {
+                postcss([autoprefixer])
+                  .process(result.css.toString(), { from: undefined })
+                  .then(({ css }) => {
+                    this.css[i] = this.processPath(css);
+                    this.css[i] = this.processResources(this.css[i]);
+                    if (this.cacheDir) {
+                      fs.writeFileSync(cachedPath, this.css[i], 'utf8');
+                    }
+                    res();
+                  });
+              }
+            });
+          }
         })
       );
     });

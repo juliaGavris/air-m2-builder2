@@ -3,7 +3,6 @@ import webpackCompileConfig from '../webpack-compiler.config.mjs';
 import CompileSass from './compileSass.mjs';
 import crypto from 'crypto';
 import { dirname, normalize } from 'path';
-import glob from 'glob';
 import fs from 'fs';
 
 class CompileResource {
@@ -16,7 +15,6 @@ class CompileResource {
 
 class CompileSource {
   constructor (opt, { path, entry }) {
-    // console.log(opt, path, entry)
     this.opt = opt;
 
     const compileOpt = {
@@ -50,17 +48,18 @@ class CompileSource {
 }
 
 class CompileHtml {
-  constructor ({ buildMode, inputFile, outputFile, importPathResolve = null }) {
+  constructor ({ buildMode, cacheDir = false, inputFile, outputFile, importPathResolve = null }) {
 
     this.inputFile = inputFile;
     this.outputFile = outputFile;
+    // this.buildDir = cacheDir ? cacheDir : ~inputFile.indexOf('node_modules') ? dirname(inputFile) : dirname(outputFile);
     this.buildDir = ~inputFile.indexOf('node_modules') ? dirname(inputFile) : dirname(outputFile);
     this.htmlText = fs.readFileSync(inputFile, 'utf8');
 
     this.config = {
       configs: [],
       scripts: [],
-      sass: new CompileSass({ htmlText: this.htmlText, filePath: dirname(inputFile) }),
+      sass: new CompileSass({ htmlText: this.htmlText, filePath: dirname(inputFile), cacheDir }),
     };
 
     const jsSources = ((text, ...regexp) => {
@@ -131,11 +130,11 @@ class CompileHtml {
     };
 
     if (jsSources !== null) {
-      jsSources.forEach((data) => prepareSource({ data, ext: 'js'}));
+      jsSources.forEach((data) => prepareSource({ data, ext: 'js' }));
     }
 
     if (jsxSources !== null) {
-      jsxSources.forEach((data) => prepareSource({ data, ext: 'jsx'}));
+      jsxSources.forEach((data) => prepareSource({ data, ext: 'jsx' }));
     }
 
   }
@@ -154,6 +153,9 @@ class CompileHtml {
         const compiler = webpack(config);
         promises.push(
           new Promise((res, rej) => {
+            // if (fs.existsSync(`${config.output.path}/${config.output.filename}`)) {
+            //   res()
+            // } else {
             compiler.run((error, stats) => {
               if (stats.hasErrors()) {
                 console.log(`ERROR: ${compiler.options.entry} compile error`);
@@ -162,6 +164,7 @@ class CompileHtml {
               }
               res();
             });
+            // }
           })
         );
       });
@@ -191,10 +194,10 @@ class CompileHtml {
           .replace(/<stream-source>/gi, '<script data-source-type="stream-source">')
           .replace(/<\/stream-source>/gi, '</script>');
 
-        glob(`${this.buildDir}/.tmp*.js*`, {}, (err, files) => {
-          if (err) throw err;
-          files.map(file => fs.unlink(file, () => {}));
-        });
+        // glob(`${this.buildDir}/.tmp*.js*`, {}, (err, files) => {
+        //   if (err) throw err;
+        //   files.map(file => fs.unlink(file, () => {}));
+        // });
 
         const dirName = dirname(this.outputFile);
         if (!fs.existsSync(dirName)) {
