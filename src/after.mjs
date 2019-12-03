@@ -4,18 +4,16 @@ import { importPathResolve, removeQueryString } from './utils.mjs';
 import { extname } from 'path';
 
 const sendResolve = ({ res, source, method, delay = 0 }) => {
-  if (method === 'data') {
-    setTimeout(() => {
+  setTimeout(() => {
+    if (method === 'data') {
       res.send(source);
-    }, delay);
-  } else if (method === 'file') {
-    setTimeout(() => {
+    } else if (method === 'file') {
       res.sendFile(source);
-    }, delay);
-  }
+    }
+  }, delay);
 };
 
-export default function after ({ dirname, module, currentModule, units, optional, latency, cacheDir, app: { requester, installer }, execute, devServer, buildMode }) {
+export default function after ({ dirname, module, currentModule, units, optional, latency, app: { requester, installer }, execute, devServer, buildMode }) {
   return function (app) {
     app.get(`/${units.dirS}/*`, (req, res) => {
       const request = new Request({ req, dirname, units, currentModule, optional, execute, buildMode, devServer });
@@ -39,8 +37,7 @@ export default function after ({ dirname, module, currentModule, units, optional
             ...request.options,
             inputFile: filePath,
             outputFile,
-            importPathResolve: importPathResolve(filePath),
-            cacheDir
+            importPathResolve: importPathResolve(filePath)
           })
             .run()
             .then(htmlText => {

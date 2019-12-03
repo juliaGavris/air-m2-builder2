@@ -6,8 +6,6 @@ import WebpackDevServer from 'webpack-dev-server';
 import App from '../src/app.mjs';
 import BuildProd from '../src/buildprod.mjs';
 import after from '../src/after.mjs';
-import rimraf from 'rimraf';
-import fs from 'fs';
 
 export default class DevServer {
   constructor (options) {
@@ -54,10 +52,6 @@ export default class DevServer {
 
     const app = new App({ execute });
 
-    const cacheDir = `${dirname}/node_modules/${currentModule}/cache/`;
-    rimraf.sync(cacheDir);
-    fs.mkdirSync(cacheDir, { recursive: true });
-
     const server = new WebpackDevServer(this.compiler, {
       headers: { 'Access-Control-Allow-Origin': '*' },
       disableHostCheck: true,
@@ -67,7 +61,7 @@ export default class DevServer {
       hot: true,
       inline: true,
       watchContentBase: true,
-      after: after({ dirname, currentModule, units, optional, app, latency, buildMode, devServer, cacheDir })
+      after: after({ dirname, currentModule, units, optional, app, latency, buildMode, devServer })
     });
 
     server.listen(port, '0.0.0.0', err => {
