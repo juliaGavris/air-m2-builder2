@@ -109,7 +109,7 @@ class CompileHtml {
 
   regexps = {
     js: ['(?<=<script>)([\\s\\S]*?)(?=<\\/script>)', '(?<=<view-source>)([\\s\\S]*?)(?=<\\/view-source>)', '(?<=<stream-source>)([\\s\\S]*?)(?=<\\/stream-source>)'],
-    jsx: ['(?<=<react-source>)([\s\S]*?)(?=<\/react-source>)'],
+    jsx: ['(?<=<react-source>)([\\s\\S]*?)(?=<\/react-source>)'],
     scss: [`(?<=<style[a-z0-9="' ]*type\\s*=\\s*["']?\\s*text\\/scss\\s*["']?[a-z0-9="' ]*>)([\\s\\S]*?)(?=<\\/style>)`]
   };
 
