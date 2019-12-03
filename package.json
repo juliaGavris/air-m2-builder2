@@ -34,15 +34,13 @@
     "dart-sass": "^1.18.0",
     "glob": "^7.1.4",
     "html-webpack-plugin": "^3.2.0",
+    "minimist": "^1.2.0",
     "mocha": "^6.0.2",
     "path": "^0.12.7",
     "postcss": "^7.0.16",
+    "rimraf": "^3.0.0",
     "webpack": "^4.29.5",
     "webpack-cli": "^3.2.3",
     "webpack-dev-server": "^3.2.1"
   },
-  "devDependencies": {
-    "minimist": "^1.2.0",
-    "rimraf": "^3.0.0"
-  }
 }

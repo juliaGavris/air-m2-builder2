@@ -17,9 +17,10 @@ export default class DevServer {
   precompile () {
     const { buildMode, devServer, dirname, currentModule } = this.options;
 
-    return new Promise(res => {
-      webpack(webpackConfig(buildMode, devServer, dirname, this.options)).run(err => {
-        if (err) throw err;
+    return new Promise((res, rej) => {
+      webpack(webpackConfig(buildMode, devServer, dirname, this.options)).run((err, stats) => {
+        if (stats.compilation.errors.length) throw new Error(stats.compilation.errors);
+        if (err) throw new Error(err);
 
         const compileOpt = {
           buildMode,
