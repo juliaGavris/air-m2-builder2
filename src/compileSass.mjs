@@ -93,6 +93,9 @@ export default class CompileSass {
                     this.css[i] = this.processPath(css);
                     this.css[i] = this.processResources(this.css[i]);
                     if (this.cacheDir) {
+                      if (!fs.existsSync(this.cacheDir)) {
+                        fs.mkdirSync(this.cacheDir, { recursive: true });
+                      }
                       fs.writeFileSync(cachedPath, this.css[i], 'utf8');
                     }
                     res();
