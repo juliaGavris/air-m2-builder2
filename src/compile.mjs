@@ -4,7 +4,7 @@ import { dirname, normalize, resolve } from 'path';
 import fse from 'fs-extra';
 import crypto from 'crypto';
 
-import sass from 'dart-sass';
+import sass from 'sass';
 import postcss from 'postcss';
 import autoprefixer from 'autoprefixer';
 import csstree from 'css-tree';
