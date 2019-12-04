@@ -10,6 +10,11 @@ import autoprefixer from 'autoprefixer';
 import csstree from 'css-tree';
 
 const SOURCE_TYPES = ['js', 'jsx', 'scss'];
+const REGEXPS = {
+  js: ['(?<=<script>)([\\s\\S]*?)(?=<\\/script>)', '(?<=<view-source>)([\\s\\S]*?)(?=<\\/view-source>)', '(?<=<stream-source>)([\\s\\S]*?)(?=<\\/stream-source>)'],
+  jsx: ['(?<=<react-source>)([\\s\\S]*?)(?=<\/react-source>)'],
+  scss: [`(?<=<style[a-z0-9="' ]*type\\s*=\\s*["']?\\s*text\\/scss\\s*["']?[a-z0-9="' ]*>)([\\s\\S]*?)(?=<\\/style>)`]
+};
 
 class CompileResource {
   run () {
@@ -63,15 +68,15 @@ class CompileHtml {
     this.importPathResolve = importPathResolve;
   }
 
-  // sass
-  processImports (scss) {
+  processSassImports (scss) {
     return scss.replace(/(?:@import ["'])(\S+)(?:["'];)/g, (match, importPath) => {
       const lvl = (importPath.match(/\.\.\//g) || []).length;
       const rel = new Array(lvl).fill('../').join('') || './';
       return `/* <import rel="${rel}"> */ @import "${resolve(dirname(this.inputFile), importPath).replace(/\\/g, '/')}"; /* </import> */`;
     });
   }
-  processPath (css) {
+
+  processCssPath (css) {
     const regex = /(?:\/\* <import[a-z0-9="' ]*rel\s*=\s*["']?\s*([a-zA-Z0-9.\/]*)\s*["']?[a-z0-9="' ]*> \*\/)([\s\S]*?)(?:\/\* <\/import> \*\/)/gm;
 
     return css.replace(regex, (full, rel, match) => {
@@ -88,7 +93,8 @@ class CompileHtml {
       return csstree.generate(ast);
     });
   }
-  processResources (css) {
+
+  processCssResources (css) {
     const ast = csstree.parse(css);
 
     csstree.walk(ast, function (node) {
@@ -102,16 +108,7 @@ class CompileHtml {
 
     return csstree.generate(ast);
   }
-  ////
 
-
-
-
-  regexps = {
-    js: ['(?<=<script>)([\\s\\S]*?)(?=<\\/script>)', '(?<=<view-source>)([\\s\\S]*?)(?=<\\/view-source>)', '(?<=<stream-source>)([\\s\\S]*?)(?=<\\/stream-source>)'],
-    jsx: ['(?<=<react-source>)([\\s\\S]*?)(?=<\/react-source>)'],
-    scss: [`(?<=<style[a-z0-9="' ]*type\\s*=\\s*["']?\\s*text\\/scss\\s*["']?[a-z0-9="' ]*>)([\\s\\S]*?)(?=<\\/style>)`]
-  };
 
   extractSources = (htmlSource, regexps) => regexps.map((regexp) => htmlSource.match(new RegExp(regexp, 'gi'))).flat().filter(Boolean);
 
@@ -129,10 +126,6 @@ class CompileHtml {
       length: source.length
     };
 
-    // if (this.importPathResolve) {
-    //   debugger
-    //   source = this.importPathResolve(source);
-    // }
 
 
     if (type === 'scss') {
@@ -140,53 +133,53 @@ class CompileHtml {
         if (await fse.exists(`${buildDir}/${filenameBundle}`)) {
           resolve({...meta, data: (await fse.readFile(`${buildDir}/${filenameBundle}`)).toString() });
         } else {
-          const start = Date.now()
-          sass.render({ data: this.processImports(source) }, (err, result) => {
+          sass.render({ data: this.processSassImports(source) }, (err, result) => {
             if (err) {
               console.log(`Sass compile error:\n${err}`, buildDir);
             } else {
               postcss([autoprefixer])
                 .process(result.css.toString(), { from: undefined })
                 .then(({ css }) => {
-                  css = this.processPath(css);
-                  css = this.processResources(css);
+                  css = this.processCssPath(css);
+                  css = this.processCssResources(css);
                   fse.writeFile(`${buildDir}/${filenameBundle}`, css, 'utf8');
                   resolve({...meta, data: css });
                 });
             }
           })
-
         }
+      });
+    } else if (['js', 'jsx'].includes(type)) {
+
+      if (this.importPathResolve) {
+        source = this.importPathResolve(source);
+      }
+
+      await fse.writeFile(`${buildDir}/${filename}`, source, 'utf8');
+
+      const config = webpackCompileConfig({
+        buildMode,
+        path: normalize(buildDir),
+        entry: `${buildDir}/${filename}`,
+        filename: filenameBundle,
+      });
+
+      const compiler = webpack(config);
+
+      return new Promise((resolve, reject) => {
+        compiler.run(async (error, stats) => {
+          if (stats.hasErrors()) {
+            console.log(`ERROR: ${compiler.options.entry} compile error`);
+            reject(`ERROR '${compiler.options.entry}': compile error`);
+          } else {
+            resolve({
+              ...meta,
+              data: (await fse.readFile(meta.file)).toString()
+            });
+          }
+        });
       });
     }
-
-
-    await fse.writeFile(`${buildDir}/${filename}`, source, 'utf8');
-
-    const config = webpackCompileConfig({
-      buildMode,
-      path: normalize(buildDir),
-      entry: `${buildDir}/${filename}`,
-      filename: filenameBundle,
-    });
-
-    const compiler = webpack(config);
-
-    return new Promise((resolve, reject) => {
-      compiler.run(async (error, stats) => {
-        if (stats.hasErrors()) {
-          console.log(`ERROR: ${compiler.options.entry} compile error`);
-          reject(`ERROR '${compiler.options.entry}': compile error`);
-        } else {
-          resolve({
-            ...meta,
-            data: (await fse.readFile(meta.file)).toString()
-          });
-        }
-      });
-
-    });
-
   };
 
   async run () {
@@ -197,7 +190,7 @@ class CompileHtml {
 
       const sources = SOURCE_TYPES.map((type) => ({
         type,
-        sources: this.extractSources(htmlSource, this.regexps[type])
+        sources: this.extractSources(htmlSource, REGEXPS[type])
       }));
 
       const promises = sources
@@ -219,11 +212,6 @@ class CompileHtml {
 
           await fse.ensureDir(dirname(outputFile));
           await fse.writeFile(outputFile, outputHtml, 'utf8');
-
-          // glob(`${this.buildDir}/.tmp*.*`, {}, (err, files) => {
-          //   if (err) throw err;
-          //   files.map(file => fse.unlink(file, () => {}));
-          // });
 
           resolve(outputHtml);
         });

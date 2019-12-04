@@ -6,6 +6,8 @@ import WebpackDevServer from 'webpack-dev-server';
 import App from '../src/app.mjs';
 import BuildProd from '../src/buildprod.mjs';
 import after from '../src/after.mjs';
+import glob from 'glob';
+import fse from 'fs-extra';
 
 export default class DevServer {
   constructor (options) {
@@ -49,6 +51,11 @@ export default class DevServer {
       buildMode,
       devServer
     } = this.options;
+
+    glob(`${dirname}/node_modules/${currentModule}/**/.tmp*.*`, {}, (err, files) => {
+      if (err) throw err;
+      files.map(file => fse.unlink(file, () => {}));
+    });
 
     const app = new App({ execute });
 
