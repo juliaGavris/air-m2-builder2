@@ -53,7 +53,7 @@ module.exports = (buildMode, devServer, dirname, { m2path, entryUnit, revision =
     ]
   };
 
-  if (buildMode === 'production') {
+  if (buildMode === 'production' && process.env.DEV_MODE  !== '1') {
     obj.entry.push(`${__dirname}/src/babel-polyfill.js`);
     obj.module.rules.push({
         test: /\.m?js$/,
@@ -61,8 +61,10 @@ module.exports = (buildMode, devServer, dirname, { m2path, entryUnit, revision =
           {
             loader: 'air-m2-builder2/src/webpack-strip-block.js',
             options: {
-              start: '<@debug>',
-              end: '</@debug>'
+              blocks: [
+                ['<@debug>', '</@debug>'],
+                ['debug:start', 'debug:end'],
+              ]
             }
           },
           {

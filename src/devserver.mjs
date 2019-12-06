@@ -6,8 +6,8 @@ import WebpackDevServer from 'webpack-dev-server';
 import App from '../src/app.mjs';
 import BuildProd from '../src/buildprod.mjs';
 import after from '../src/after.mjs';
-import rimraf from 'rimraf';
-import fs from 'fs';
+import glob from 'glob';
+import fse from 'fs-extra';
 
 export default class DevServer {
   constructor (options) {
@@ -17,9 +17,10 @@ export default class DevServer {
   precompile () {
     const { buildMode, devServer, dirname, currentModule } = this.options;
 
-    return new Promise(res => {
-      webpack(webpackConfig(buildMode, devServer, dirname, this.options)).run(err => {
-        if (err) throw err;
+    return new Promise((res, rej) => {
+      webpack(webpackConfig(buildMode, devServer, dirname, this.options)).run((err, stats) => {
+        if (stats.compilation.errors.length) throw new Error(stats.compilation.errors);
+        if (err) throw new Error(err);
 
         const compileOpt = {
           buildMode,
@@ -51,11 +52,12 @@ export default class DevServer {
       devServer
     } = this.options;
 
-    const app = new App({ execute });
+    glob(`${dirname}/node_modules/${currentModule}/**/.tmp*.*`, {}, (err, files) => {
+      if (err) throw err;
+      files.map(file => fse.unlink(file, () => {}));
+    });
 
-    const cacheDir = `${dirname}/node_modules/${currentModule}/cache/`;
-    rimraf.sync(cacheDir);
-    fs.mkdirSync(cacheDir, { recursive: true });
+    const app = new App({ execute });
 
     const server = new WebpackDevServer(this.compiler, {
       headers: { 'Access-Control-Allow-Origin': '*' },
@@ -66,7 +68,7 @@ export default class DevServer {
       hot: true,
       inline: true,
       watchContentBase: true,
-      after: after({ dirname, currentModule, units, optional, app, latency, buildMode, devServer, cacheDir })
+      after: after({ dirname, currentModule, units, optional, app, latency, buildMode, devServer })
     });
 
     server.listen(port, '0.0.0.0', err => {

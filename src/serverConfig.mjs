@@ -1,10 +1,8 @@
 import { existsSync, readFileSync } from 'fs';
 import { basename, join, resolve } from 'path';
-import { Utils } from '../src/utils.mjs';
+import { addUnique, getAdditional, getFrom } from './utils.mjs';
 import minimist from 'minimist';
 import rimraf from 'rimraf';
-
-const utils = new Utils();
 
 const PORT = 9000;
 const units = { dir: 'm2unit', requires: 'm2units', dirS: 'm2units' };
@@ -55,30 +53,30 @@ export default function serverConfig (options = {}) {
   const optional = new Set();
   const unitsPath = `${dirname}/${m2units}.json`;
   if (existsSync(unitsPath)) {
-    const additionals = utils.getAdditional(unitsPath, units.requires, true);
+    const additionals = getAdditional(unitsPath, units.requires, true);
     if (additionals != null) {
-      utils.addUnique(optional, additionals);
+      addUnique(optional, additionals);
     }
   }
   if (existsSync(`${dirname}/package.json`)) {
-    const additionals = utils.getAdditional(`${dirname}/package.json`, units.requires);
+    const additionals = getAdditional(`${dirname}/package.json`, units.requires);
     if (additionals != null) {
-      utils.addUnique(optional, additionals);
+      addUnique(optional, additionals);
     }
   }
 
   const pkgjsonPath = `${dirname}/package.json`;
   if (existsSync(pkgjsonPath)) {
-    const additionals = utils.getAdditional(pkgjsonPath, units.requires);
+    const additionals = getAdditional(pkgjsonPath, units.requires);
     if (additionals != null) {
-      utils.addUnique(optional, additionals);
+      addUnique(optional, additionals);
     }
   }
 
   if (buildMode === 'development') {
     optional.forEach(({ module, source }) => {
       const pkgjsonPath = `${dirname}/node_modules/${module}/package.json`;
-      if (utils.getFrom(pkgjsonPath) && source !== utils.getFrom(pkgjsonPath)) {
+      if (getFrom(pkgjsonPath) && source !== getFrom(pkgjsonPath)) {
         console.log(`Removing wrong dep ${module}...`);
         rimraf.sync(`${dirname}/node_modules/${module}`);
       }
