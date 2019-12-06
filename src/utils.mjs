@@ -57,7 +57,7 @@ export const getAllFiles = (dir, extensions = [], includes = true, filelist = []
 };
 
 export const importPathResolve = (filePath) => (data) => {
-  const regex = /import\s(?:["'\s]*[\w*{}\$\n\r\t, ]+from\s*)?["'\s]*([^"']+)["'\s]/gm;
+  const regex = /(?:import|export)\s(?:["'\s]*[\w*{}\$\n\r\t, ]+from\s*)?["'\s]*([^"']+)["'\s]/gm;
   const sourceDir = dirname(filePath);
   return data.replace(regex, (match, importPath) => {
     let res = match;
