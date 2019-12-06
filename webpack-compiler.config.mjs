@@ -27,15 +27,17 @@ export default ({ entry, path, filename, buildMode, resolve = null }) => {
     ]
   };
 
-  if (buildMode === 'production') {
+  if (buildMode === 'production' && process.env.DEV_MODE  !== '1') {
     obj.module.rules.push({
       test: /\.m?js$/,
       use: [
         {
           loader: 'air-m2-builder2/src/webpack-strip-block.js',
           options: {
-            start: '<@debug>',
-            end: '</@debug>'
+            blocks: [
+              ['<@debug>', '</@debug>'],
+              ['debug:start', 'debug:end'],
+            ]
           }
         },
         {

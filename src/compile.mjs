@@ -183,7 +183,7 @@ class CompileHtml {
   };
 
   async run () {
-    const { buildDir, cacheDir, inputFile, outputFile } = this;
+    const { inputFile, outputFile } = this;
 
     try {
       let htmlSource = await fse.readFile(inputFile, 'utf8');
