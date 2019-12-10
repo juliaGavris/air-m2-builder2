@@ -1,6 +1,6 @@
 import webpack from 'webpack';
 import webpackCompileConfig from '../webpack-compiler.config.mjs';
-import { dirname, normalize, resolve } from 'path';
+import { dirname, normalize, relative, resolve, sep } from 'path';
 import fse from 'fs-extra';
 import crypto from 'crypto';
 
@@ -70,24 +70,24 @@ class CompileHtml {
 
   processSassImports (scss) {
     return scss.replace(/(?:@import ["'])(\S+)(?:["'];)/g, (match, importPath) => {
-      const lvl = (importPath.match(/\.\.\//g) || []).length;
-      const rel = new Array(lvl).fill('../').join('') || './';
-      return `/* <import rel="${rel}"> */ @import "${resolve(dirname(this.inputFile), importPath).replace(/\\/g, '/')}"; /* </import> */`;
+      // абсолютный путь до файла со стилями
+      const absoluteScssPath = resolve(dirname(this.inputFile), importPath).replace(/\\/g, '/');
+      // относительный путь между модулем и файлом со стилями
+      let rel = relative(dirname(this.inputFile), dirname(absoluteScssPath));
+      return `/* <import rel="${rel}"> */ @import "${absoluteScssPath}"; /* </import> */`;
     });
   }
 
   processCssPath (css) {
-    const regex = /(?:\/\* <import[a-z0-9="' ]*rel\s*=\s*["']?\s*([a-zA-Z0-9.\/]*)\s*["']?[a-z0-9="' ]*> \*\/)([\s\S]*?)(?:\/\* <\/import> \*\/)/gm;
-
+    const regex = /(?:\/\* <import rel="([^"]+)"> \*\/)([\s\S]*?)(?:\/\* <\/import> \*\/)/gm;
     return css.replace(regex, (full, rel, match) => {
-      if (rel === './') return match;
       const ast = csstree.parse(match);
       csstree.walk(ast, (node) => {
         if (node.type === 'Url') {
           const value = node.value;
           let url = (value.type === 'Raw' ? value.value : value.value.substr(1, value.value.length - 2));
           if (url.indexOf('data:') > -1) return;
-          node.value.value = `${rel}${url}`.replace(/\/\.\//g, '/');
+          node.value.value = `${rel}${sep}${url}`;
         }
       });
       return csstree.generate(ast);
@@ -109,7 +109,6 @@ class CompileHtml {
     return csstree.generate(ast);
   }
 
-
   extractSources = (htmlSource, regexps) => regexps.map((regexp) => htmlSource.match(new RegExp(regexp, 'gi'))).flat().filter(Boolean);
 
   configureCompiler = async ({ htmlSource, source, type }) => {
@@ -126,12 +125,10 @@ class CompileHtml {
       length: source.length
     };
 
-
-
     if (type === 'scss') {
       return new Promise(async (resolve) => {
         if (await fse.exists(`${buildDir}/${filenameBundle}`)) {
-          resolve({...meta, data: (await fse.readFile(`${buildDir}/${filenameBundle}`)).toString() });
+          resolve({ ...meta, data: (await fse.readFile(`${buildDir}/${filenameBundle}`)).toString() });
         } else {
           sass.render({ data: this.processSassImports(source) }, (err, result) => {
             if (err) {
@@ -143,10 +140,10 @@ class CompileHtml {
                   css = this.processCssPath(css);
                   css = this.processCssResources(css);
                   fse.writeFile(`${buildDir}/${filenameBundle}`, css, 'utf8');
-                  resolve({...meta, data: css });
+                  resolve({ ...meta, data: css });
                 });
             }
-          })
+          });
         }
       });
     } else if (['js', 'jsx'].includes(type)) {
