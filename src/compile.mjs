@@ -68,7 +68,7 @@ class CompileHtml {
     this.importPathResolve = importPathResolve;
   }
 
-  async configureCompiler ({ htmlSource, source, type }) {
+  async configureCompiler ({ htmlSource, source, type, start, length }) {
     const { buildMode, buildDir } = this;
     const hash = crypto.createHash('md5').update(source).digest('hex');
     const filename = `.tmp-${hash}.${type}`;
@@ -78,8 +78,8 @@ class CompileHtml {
 
     const meta = {
       file: `${buildDir}/${filenameBundle}`,
-      start: htmlSource.indexOf(source),
-      length: source.length
+      start,
+      length
     };
 
     if (type === 'scss') {
@@ -136,7 +136,15 @@ class CompileHtml {
   };
 
   extractSources (htmlSource, regexps) {
-    return regexps.map((regexp) => htmlSource.match(new RegExp(regexp, 'gi')))
+    return regexps.map((regexp) => {
+      const reg = new RegExp(regexp, 'gi');
+      const acc = [];
+      let match;
+      while ((match = reg.exec(htmlSource)) !== null) {
+        acc.push(match);
+      }
+      return acc;
+    })
       .reduce((acc, matches) => Array.isArray(matches) ? [...acc, ...matches] : acc, [])
       .filter(Boolean);
   }
@@ -190,11 +198,18 @@ class CompileHtml {
 
       const sources = SOURCE_TYPES.map((type) => ({
         type,
-        sources: this.extractSources(htmlSource, REGEXPS[type])
+        matches: this.extractSources(htmlSource, REGEXPS[type])
       }));
 
       const promises = sources
-        .map(({ type, sources }) => sources.map((source) => this.configureCompiler({ htmlSource, source, type })))
+        .map(({ type, matches }) => matches.map((match) => this.configureCompiler({
+            htmlSource,
+            type,
+            source: match[0],
+            start: match.index,
+            length: match[0].length
+          })
+        ))
         .reduce((acc, promises) => Array.isArray(promises) ? [...acc, ...promises] : acc, []);
 
       return new Promise((resolve, reject) => {
