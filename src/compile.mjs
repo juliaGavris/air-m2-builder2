@@ -59,10 +59,11 @@ class CompileSource {
 }
 
 class CompileHtml {
-  constructor ({ buildMode, cacheDir = false, inputFile, outputFile, importPathResolve = null }) {
+  constructor ({ buildMode, module, cacheDir = false, inputFile, outputFile, importPathResolve = null }) {
     this.inputFile = inputFile;
     this.outputFile = outputFile;
     this.buildMode = buildMode;
+    this.module = module;
     this.buildDir = ~inputFile.indexOf('node_modules') ? dirname(inputFile) : dirname(outputFile);
     this.cacheDir = cacheDir;
     this.importPathResolve = importPathResolve;
@@ -159,6 +160,18 @@ class CompileHtml {
     });
   }
 
+  resolveAbsoluteResourcePath (url) {
+    let filePath, rel;
+    if (this.buildMode === 'development') {
+      filePath = dirname(this.inputFile);
+      rel = relative(filePath, filePath.substr(0, filePath.indexOf('src') + 4));
+    } else {
+      filePath = dirname(this.outputFile);
+      rel = relative(filePath, filePath.substr(0, filePath.lastIndexOf(this.module) + this.module.length + 1));
+    }
+    return `${rel}${url}`;
+  }
+
   processCssPath (css) {
     const regex = /(?:\/\* <import rel="([^"]+)"> \*\/)([\s\S]*?)(?:\/\* <\/import> \*\/)/gm;
     return css.replace(regex, (full, rel, match) => {
@@ -168,7 +181,11 @@ class CompileHtml {
           const value = node.value;
           let url = (value.type === 'Raw' ? value.value : value.value.substr(1, value.value.length - 2));
           if (url.indexOf('data:') > -1) return;
-          node.value.value = `${rel}${sep}${url}`;
+
+          node.value.value = url[0] === '/'
+            ? this.resolveAbsoluteResourcePath(url)
+            : `${rel}${sep}${url}`;
+
         }
       });
       return csstree.generate(ast);

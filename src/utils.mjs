@@ -69,7 +69,7 @@ export const importPathResolve = (filePath) => (data) => {
   });
 };
 
-export const prodCopyCompile = ({ from, to, buildMode }) => new Promise((resolve, reject) => {
+export const prodCopyCompile = ({ from, to, buildMode, module }) => new Promise((resolve, reject) => {
   copyFiles({
     from,
     to,
@@ -84,7 +84,8 @@ export const prodCopyCompile = ({ from, to, buildMode }) => new Promise((resolve
           buildMode,
           inputFile: file,
           outputFile: `${to}/${file.substring(from.replace('/**/*', '').length)}`,
-          importPathResolve: importPathResolve(file)
+          importPathResolve: importPathResolve(file),
+          module
         };
         promises.push(new CompileHtml(compileOpt).run());
       });
