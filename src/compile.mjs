@@ -1,6 +1,6 @@
 import webpack from 'webpack';
 import webpackCompileConfig from '../webpack-compiler.config.mjs';
-import { dirname, normalize, resolve } from 'path';
+import { dirname, normalize, relative, resolve, sep } from 'path';
 import fse from 'fs-extra';
 import crypto from 'crypto';
 
@@ -68,51 +68,7 @@ class CompileHtml {
     this.importPathResolve = importPathResolve;
   }
 
-  processSassImports (scss) {
-    return scss.replace(/(?:@import ["'])(\S+)(?:["'];)/g, (match, importPath) => {
-      const lvl = (importPath.match(/\.\.\//g) || []).length;
-      const rel = new Array(lvl).fill('../').join('') || './';
-      return `/* <import rel="${rel}"> */ @import "${resolve(dirname(this.inputFile), importPath).replace(/\\/g, '/')}"; /* </import> */`;
-    });
-  }
-
-  processCssPath (css) {
-    const regex = /(?:\/\* <import[a-z0-9="' ]*rel\s*=\s*["']?\s*([a-zA-Z0-9.\/]*)\s*["']?[a-z0-9="' ]*> \*\/)([\s\S]*?)(?:\/\* <\/import> \*\/)/gm;
-
-    return css.replace(regex, (full, rel, match) => {
-      if (rel === './') return match;
-      const ast = csstree.parse(match);
-      csstree.walk(ast, (node) => {
-        if (node.type === 'Url') {
-          const value = node.value;
-          let url = (value.type === 'Raw' ? value.value : value.value.substr(1, value.value.length - 2));
-          if (url.indexOf('data:') > -1) return;
-          node.value.value = `${rel}${url}`.replace(/\/\.\//g, '/');
-        }
-      });
-      return csstree.generate(ast);
-    });
-  }
-
-  processCssResources (css) {
-    const ast = csstree.parse(css);
-
-    csstree.walk(ast, function (node) {
-      if ((this.rule || this.atrule && this.atrule.name === 'media') && node.type === 'Url') {
-        let url = (node.value.type === 'Raw' ? node.value.value : node.value.value.substr(1, node.value.value.length - 2));
-        if (url.indexOf('data:') === -1) {
-          node.value.value = `/* <image url="${url}"> */`;
-        }
-      }
-    });
-
-    return csstree.generate(ast);
-  }
-
-
-  extractSources = (htmlSource, regexps) => regexps.map((regexp) => htmlSource.match(new RegExp(regexp, 'gi'))).flat().filter(Boolean);
-
-  configureCompiler = async ({ htmlSource, source, type }) => {
+  async configureCompiler ({ htmlSource, source, type, start, length }) {
     const { buildMode, buildDir } = this;
     const hash = crypto.createHash('md5').update(source).digest('hex');
     const filename = `.tmp-${hash}.${type}`;
@@ -122,16 +78,14 @@ class CompileHtml {
 
     const meta = {
       file: `${buildDir}/${filenameBundle}`,
-      start: htmlSource.indexOf(source),
-      length: source.length
+      start,
+      length
     };
-
-
 
     if (type === 'scss') {
       return new Promise(async (resolve) => {
         if (await fse.exists(`${buildDir}/${filenameBundle}`)) {
-          resolve({...meta, data: (await fse.readFile(`${buildDir}/${filenameBundle}`)).toString() });
+          resolve({ ...meta, data: (await fse.readFile(`${buildDir}/${filenameBundle}`)).toString() });
         } else {
           sass.render({ data: this.processSassImports(source) }, (err, result) => {
             if (err) {
@@ -143,14 +97,13 @@ class CompileHtml {
                   css = this.processCssPath(css);
                   css = this.processCssResources(css);
                   fse.writeFile(`${buildDir}/${filenameBundle}`, css, 'utf8');
-                  resolve({...meta, data: css });
+                  resolve({ ...meta, data: css });
                 });
             }
-          })
+          });
         }
       });
     } else if (['js', 'jsx'].includes(type)) {
-
       if (this.importPathResolve) {
         source = this.importPathResolve(source);
       }
@@ -182,6 +135,61 @@ class CompileHtml {
     }
   };
 
+  extractSources (htmlSource, regexps) {
+    return regexps.map((regexp) => {
+      const reg = new RegExp(regexp, 'gi');
+      const acc = [];
+      let match;
+      while ((match = reg.exec(htmlSource)) !== null) {
+        acc.push(match);
+      }
+      return acc;
+    })
+      .reduce((acc, matches) => Array.isArray(matches) ? [...acc, ...matches] : acc, [])
+      .filter(Boolean);
+  }
+
+  processSassImports (scss) {
+    return scss.replace(/(?:@import ["'])(\S+)(?:["'];)/g, (match, importPath) => {
+      // абсолютный путь до файла со стилями
+      const absoluteScssPath = resolve(dirname(this.inputFile), importPath).replace(/\\/g, '/');
+      // относительный путь между модулем и файлом со стилями
+      let rel = relative(dirname(this.inputFile), dirname(absoluteScssPath));
+      return `/* <import rel="${rel}"> */ @import "${absoluteScssPath}"; /* </import> */`;
+    });
+  }
+
+  processCssPath (css) {
+    const regex = /(?:\/\* <import rel="([^"]+)"> \*\/)([\s\S]*?)(?:\/\* <\/import> \*\/)/gm;
+    return css.replace(regex, (full, rel, match) => {
+      const ast = csstree.parse(match);
+      csstree.walk(ast, (node) => {
+        if (node.type === 'Url') {
+          const value = node.value;
+          let url = (value.type === 'Raw' ? value.value : value.value.substr(1, value.value.length - 2));
+          if (url.indexOf('data:') > -1) return;
+          node.value.value = `${rel}${sep}${url}`;
+        }
+      });
+      return csstree.generate(ast);
+    });
+  }
+
+  processCssResources (css) {
+    const ast = csstree.parse(css);
+
+    csstree.walk(ast, function (node) {
+      if ((this.rule || this.atrule && this.atrule.name === 'media') && node.type === 'Url') {
+        let url = (node.value.type === 'Raw' ? node.value.value : node.value.value.substr(1, node.value.value.length - 2));
+        if (url.indexOf('data:') === -1) {
+          node.value.value = `/* <image url="${url}"> */`;
+        }
+      }
+    });
+
+    return csstree.generate(ast);
+  }
+
   async run () {
     const { inputFile, outputFile } = this;
 
@@ -190,12 +198,19 @@ class CompileHtml {
 
       const sources = SOURCE_TYPES.map((type) => ({
         type,
-        sources: this.extractSources(htmlSource, REGEXPS[type])
+        matches: this.extractSources(htmlSource, REGEXPS[type])
       }));
 
       const promises = sources
-        .map(({ type, sources }) => sources.map((source) => this.configureCompiler({ htmlSource, source, type })))
-        .flat();
+        .map(({ type, matches }) => matches.map((match) => this.configureCompiler({
+            htmlSource,
+            type,
+            source: match[0],
+            start: match.index,
+            length: match[0].length
+          })
+        ))
+        .reduce((acc, promises) => Array.isArray(promises) ? [...acc, ...promises] : acc, []);
 
       return new Promise((resolve, reject) => {
         Promise.all(promises).then(async (compiled) => {
