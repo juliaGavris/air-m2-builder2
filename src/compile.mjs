@@ -86,7 +86,7 @@ class CompileHtml {
       length
     };
 
-    if (await fse.exists(`${cacheDir}/${filenameBundle}`)) {
+    if (cacheDir && await fse.exists(`${cacheDir}/${filenameBundle}`)) {
       return new Promise(async (resolve) => {
         const data = (await fse.readFile(`${cacheDir}/${filenameBundle}`)).toString();
         resolve({ ...meta, data });
@@ -105,7 +105,9 @@ class CompileHtml {
                 .then(({ css }) => {
                   css = this.processCssPath(css);
                   css = this.processCssResources(css);
-                  fse.writeFile(`${cacheDir}/${filenameBundle}`, css, 'utf8');
+                  if (cacheDir) {
+                    fse.writeFile(`${cacheDir}/${filenameBundle}`, css, 'utf8');
+                  }
                   resolve({ ...meta, data: css });
                 });
             }
@@ -131,7 +133,9 @@ class CompileHtml {
               reject(`ERROR '${compiler.options.entry}': compile error`);
             } else {
               const data = await fse.readFile(meta.file);
-              await fse.writeFile(`${cacheDir}/${filenameBundle}`, data);
+              if (cacheDir) {
+                fse.writeFile(`${cacheDir}/${filenameBundle}`, data);
+              }
 
               resolve({
                 ...meta,
