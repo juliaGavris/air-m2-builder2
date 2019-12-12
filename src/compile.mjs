@@ -257,7 +257,7 @@ class CompileHtml {
             .replace(/<\/stream-source>/gi, '</script>');
 
           if (!fs.existsSync(dirname(outputFile))) {
-            fs.mkdirSync(buildDir, { recursive: true });
+            fs.mkdirSync(dirname(outputFile), { recursive: true });
           }
           fs.writeFileSync(outputFile, outputHtml, 'utf8');
 
