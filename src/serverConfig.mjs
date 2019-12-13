@@ -66,14 +66,6 @@ export default function serverConfig (options = {}) {
     }
   }
 
-  const pkgjsonPath = `${dirname}/package.json`;
-  if (existsSync(pkgjsonPath)) {
-    const additionals = getAdditional(pkgjsonPath, units.requires);
-    if (additionals != null) {
-      addUnique(optional, additionals);
-    }
-  }
-
   if (buildMode === 'development') {
     optional.forEach(({ module, source }) => {
       const pkgjsonPath = `${dirname}/node_modules/${module}/package.json`;

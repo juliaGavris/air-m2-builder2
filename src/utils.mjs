@@ -106,35 +106,27 @@ const jsExtenstions = ['', '.js', '.mjs', '.jsx'];
 const importJSRegex = /(?<!@)import\s(?:["'\s]*[\w*{}\$\n\r\t, ]+from\s*)?["'\s]*([^"']+)["'\s]/gm;
 const importSassRegex = /(?:@import ["'])(\S+)(?:["'];)/g;
 
-export const cacheHash = (source, { sourcePath, type }) => {
-  let hashes = [];
+export const cacheHash = (source, { sourcePath, type, recursive = false }) => {
   let importSource;
-  const regex = type === 'scss' ? importSassRegex : importJSRegex;
-  const exts = type === 'scss' ? sassExtensions : jsExtenstions;
-  const addUnderscore = (path) => importSource.replace(/([\/\\])(\w+)$/gi, '$1_$2');
+  const result = crypto.createHash('md5').update(source);
 
-  const matches = [...source.matchAll(regex)]
-    .filter((match) => match[1][0] === '.' || isAbsolute(match[1]));
+  if (recursive) {
+    const regex = type === 'scss' ? importSassRegex : importJSRegex;
+    const exts = type === 'scss' ? sassExtensions : jsExtenstions;
+    const addUnderscore = (path) => importSource.replace(/([\/\\])(\w+)$/gi, '$1_$2');
 
-  if (matches && matches.length) {
-    hashes = matches
-      .map((match) => {
-        importSource = isAbsolute(match[1]) ? match[1] : resolve(sourcePath, match[1]);
+    const matches = [...source.matchAll(regex)]
+      .filter((match) => match[1][0] === '.' || isAbsolute(match[1]));
 
-        if (existsSync(importSource) && statSync(importSource).isDirectory()) {
-          importSource = resolve(importSource, 'index');
-        }
+    if (matches && matches.length) {
+      matches
+        .map((match) => {
+          importSource = isAbsolute(match[1]) ? match[1] : resolve(sourcePath, match[1]);
 
-        for (const ext of exts) {
-          if (existsSync(`${importSource}${ext}`) && statSync(`${importSource}${ext}`).isFile()) {
-            const source = readFileSync(`${importSource}${ext}`);
-            const hash = cacheHash(source.toString(), { sourcePath: dirname(importSource), type });
-            return hash;
+          if (existsSync(importSource) && statSync(importSource).isDirectory()) {
+            importSource = resolve(importSource, 'index');
           }
-        }
 
-        if (type === 'scss') {
-          importSource = addUnderscore(importSource);
           for (const ext of exts) {
             if (existsSync(`${importSource}${ext}`) && statSync(`${importSource}${ext}`).isFile()) {
               const source = readFileSync(`${importSource}${ext}`);
@@ -142,11 +134,24 @@ export const cacheHash = (source, { sourcePath, type }) => {
               return hash;
             }
           }
-        }
-      });
-  }
 
-  return crypto.createHash('md5').update(`${source}${hashes.join('')}`).digest('hex');
+          if (type === 'scss') {
+            importSource = addUnderscore(importSource);
+            for (const ext of exts) {
+              if (existsSync(`${importSource}${ext}`) && statSync(`${importSource}${ext}`).isFile()) {
+                const source = readFileSync(`${importSource}${ext}`);
+                const hash = cacheHash(source.toString(), { sourcePath: dirname(importSource), type });
+                return hash;
+              }
+            }
+          }
+        })
+        .filter(Boolean)
+        .map((hash) => result.update(hash));
+    }
+  }
+  return result.digest('hex');
+
 };
 
 export const executeDev = ({ pkg }) => new Promise(res => {
