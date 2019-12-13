@@ -155,7 +155,6 @@ export const cacheHash = (source, { sourcePath, type, recursive = false }) => {
 };
 
 export const executeDev = ({ pkg }) => new Promise(res => {
-  console.log(pkg);
   const execString = `npm i --no-save --no-optional ${pkg}`;
   exec(execString, error => {
     res(error);
