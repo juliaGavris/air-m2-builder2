@@ -3,8 +3,11 @@ import { CompileHtml } from './compile.mjs';
 import { importPathResolve, removeQueryString } from './utils.mjs';
 import { extname } from 'path';
 
-const sendResolve = ({ res, source, method, delay = 0 }) => {
+const sendResolve = ({ res, source, method, delay = 0, code = null }) => {
   setTimeout(() => {
+    if (code) {
+      res.status(code)
+    }
     if (method === 'data') {
       res.send(source);
     } else if (method === 'file') {
@@ -27,7 +30,7 @@ export default function after ({ cacheDir, dirname, module, currentModule, units
 
       if (request.error) {
         console.log(request.error);
-        sendResolve({ res, source: request.error, method: 'data', delay });
+        sendResolve({ res, source: request.error, method: 'data', delay, code: 500 });
       } else if (request.mode === 'currentModule') {
         if (extname(filePath) === '.html') {
 

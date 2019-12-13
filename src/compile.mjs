@@ -76,7 +76,7 @@ class CompileHtml {
       source = this.importPathResolve(source);
     }
 
-    const hash = cacheHash(source, { sourcePath: buildDir, type });
+    const hash = cacheHash(source, { sourcePath: buildDir, type, recursive: !!cacheDir });
     const filename = `.tmp-${hash}.${type}`;
     const filenameBundle = `.tmp-${hash}-bundle.compiled`;
 
