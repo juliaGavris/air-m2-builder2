@@ -6,8 +6,6 @@ import WebpackDevServer from 'webpack-dev-server';
 import App from '../src/app.mjs';
 import BuildProd from '../src/buildprod.mjs';
 import after from '../src/after.mjs';
-import glob from 'glob';
-import fse from 'fs-extra';
 
 export default class DevServer {
   constructor (options) {
@@ -49,15 +47,11 @@ export default class DevServer {
       port,
       execute,
       buildMode,
-      devServer
+      devServer,
+      cacheDir
     } = this.options;
 
-    glob(`${dirname}/node_modules/${currentModule}/**/.tmp*.*`, {}, (err, files) => {
-      if (err) throw err;
-      files.map(file => fse.unlink(file, () => {}));
-    });
-
-    const app = new App({ execute });
+    const app = new App({ execute, cacheDir });
 
     const server = new WebpackDevServer(this.compiler, {
       headers: { 'Access-Control-Allow-Origin': '*' },
@@ -68,7 +62,7 @@ export default class DevServer {
       hot: true,
       inline: true,
       watchContentBase: true,
-      after: after({ dirname, currentModule, units, optional, app, latency, buildMode, devServer })
+      after: after({ app, buildMode, cacheDir, currentModule, devServer, dirname, latency, optional, units })
     });
 
     server.listen(port, '0.0.0.0', err => {

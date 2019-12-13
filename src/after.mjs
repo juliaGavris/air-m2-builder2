@@ -13,7 +13,7 @@ const sendResolve = ({ res, source, method, delay = 0 }) => {
   }, delay);
 };
 
-export default function after ({ dirname, module, currentModule, units, optional, latency, app: { requester, installer }, execute, devServer, buildMode }) {
+export default function after ({ cacheDir, dirname, module, currentModule, units, optional, latency, app: { requester, installer }, execute, devServer, buildMode }) {
   return function (app) {
     app.get(`/${units.dirS}/*`, (req, res) => {
       const request = new Request({ req, dirname, units, currentModule, optional, execute, buildMode, devServer });
@@ -37,7 +37,8 @@ export default function after ({ dirname, module, currentModule, units, optional
             ...request.options,
             inputFile: filePath,
             outputFile,
-            importPathResolve: importPathResolve(filePath)
+            importPathResolve: importPathResolve(filePath),
+            cacheDir
           })
             .run()
             .then(htmlText => {
@@ -48,7 +49,7 @@ export default function after ({ dirname, module, currentModule, units, optional
         }
       } else {
         requester
-          .get(request.options)
+          .get({ cacheDir, ...request.options })
           .then(() => sendResolve({ res, source: removeQueryString(resolvePath), method: 'file', delay }))
           .catch(error => {
             installer.deleteInstance(`${module}/${relativePath}`);

@@ -1,13 +1,13 @@
 import webpack from 'webpack';
 import webpackCompileConfig from '../webpack-compiler.config.mjs';
 import { dirname, normalize, relative, resolve, sep } from 'path';
-import fse from 'fs-extra';
-import crypto from 'crypto';
-
+import fs from 'fs';
+import glob from 'glob';
 import sass from 'sass';
 import postcss from 'postcss';
 import autoprefixer from 'autoprefixer';
 import csstree from 'css-tree';
+import { cacheHash } from './utils.mjs';
 
 const SOURCE_TYPES = ['js', 'jsx', 'scss'];
 const REGEXPS = {
@@ -69,13 +69,16 @@ class CompileHtml {
     this.importPathResolve = importPathResolve;
   }
 
-  async configureCompiler ({ htmlSource, source, type, start, length }) {
-    const { buildMode, buildDir } = this;
-    const hash = crypto.createHash('md5').update(source).digest('hex');
+  configureCompiler ({ htmlSource, source, type, start, length }) {
+    const { buildMode, buildDir, cacheDir } = this;
+
+    if (['js', 'jsx'].includes(type) && this.importPathResolve) {
+      source = this.importPathResolve(source);
+    }
+
+    const hash = cacheHash(source, { sourcePath: buildDir, type });
     const filename = `.tmp-${hash}.${type}`;
     const filenameBundle = `.tmp-${hash}-bundle.compiled`;
-
-    await fse.ensureDir(buildDir);
 
     const meta = {
       file: `${buildDir}/${filenameBundle}`,
@@ -83,11 +86,18 @@ class CompileHtml {
       length
     };
 
-    if (type === 'scss') {
-      return new Promise(async (resolve) => {
-        if (await fse.exists(`${buildDir}/${filenameBundle}`)) {
-          resolve({ ...meta, data: (await fse.readFile(`${buildDir}/${filenameBundle}`)).toString() });
-        } else {
+    if (cacheDir && fs.existsSync(`${cacheDir}/${filenameBundle}`)) {
+      return new Promise((resolve) => {
+        const data = fs.readFileSync(`${cacheDir}/${filenameBundle}`);
+        resolve({ ...meta, data });
+      });
+    } else {
+      if (!fs.existsSync(buildDir)) {
+        fs.mkdirSync(buildDir, { recursive: true });
+      }
+
+      if (type === 'scss') {
+        return new Promise((resolve) => {
           sass.render({ data: this.processSassImports(source) }, (err, result) => {
             if (err) {
               console.log(`Sass compile error:\n${err}`, buildDir);
@@ -97,42 +107,46 @@ class CompileHtml {
                 .then(({ css }) => {
                   css = this.processCssPath(css);
                   css = this.processCssResources(css);
-                  fse.writeFile(`${buildDir}/${filenameBundle}`, css, 'utf8');
+                  if (cacheDir) {
+                    fs.writeFileSync(`${cacheDir}/${filenameBundle}`, css, 'utf8');
+                  }
                   resolve({ ...meta, data: css });
                 });
             }
           });
-        }
-      });
-    } else if (['js', 'jsx'].includes(type)) {
-      if (this.importPathResolve) {
-        source = this.importPathResolve(source);
-      }
-
-      await fse.writeFile(`${buildDir}/${filename}`, source, 'utf8');
-
-      const config = webpackCompileConfig({
-        buildMode,
-        path: normalize(buildDir),
-        entry: `${buildDir}/${filename}`,
-        filename: filenameBundle,
-      });
-
-      const compiler = webpack(config);
-
-      return new Promise((resolve, reject) => {
-        compiler.run(async (error, stats) => {
-          if (stats.hasErrors()) {
-            console.log(`ERROR: ${compiler.options.entry} compile error`);
-            reject(`ERROR '${compiler.options.entry}': compile error`);
-          } else {
-            resolve({
-              ...meta,
-              data: (await fse.readFile(meta.file)).toString()
-            });
-          }
         });
-      });
+      } else if (['js', 'jsx'].includes(type)) {
+
+        fs.writeFileSync(`${buildDir}/${filename}`, source, 'utf8');
+
+        const config = webpackCompileConfig({
+          buildMode,
+          path: normalize(buildDir),
+          entry: `${buildDir}/${filename}`,
+          filename: filenameBundle,
+        });
+
+        const compiler = webpack(config);
+
+        return new Promise((resolve, reject) => {
+          compiler.run(async (error, stats) => {
+            if (stats.hasErrors()) {
+              console.log(`ERROR: ${compiler.options.entry} compile error`);
+              reject(`ERROR '${compiler.options.entry}': compile error`);
+            } else {
+              const data = fs.readFileSync(meta.file);
+              if (cacheDir) {
+                fs.writeFileSync(`${cacheDir}/${filenameBundle}`, data);
+              }
+
+              resolve({
+                ...meta,
+                data: data.toString()
+              });
+            }
+          });
+        });
+      }
     }
   };
 
@@ -207,11 +221,11 @@ class CompileHtml {
     return csstree.generate(ast);
   }
 
-  async run () {
+  run () {
     const { inputFile, outputFile } = this;
 
     try {
-      let htmlSource = await fse.readFile(inputFile, 'utf8');
+      let htmlSource = fs.readFileSync(inputFile, 'utf8');
 
       const sources = SOURCE_TYPES.map((type) => ({
         type,
@@ -230,7 +244,7 @@ class CompileHtml {
         .reduce((acc, promises) => Array.isArray(promises) ? [...acc, ...promises] : acc, []);
 
       return new Promise((resolve, reject) => {
-        Promise.all(promises).then(async (compiled) => {
+        Promise.all(promises).then((compiled) => {
           const outputHtml = compiled
             .sort((a, b) => b.start - a.start)
             .reduce((outputHtml, { start, length, data }) => outputHtml.slice(0, start) + data + outputHtml.slice(start + length), htmlSource)
@@ -242,8 +256,15 @@ class CompileHtml {
             .replace(/<stream-source>/gi, '<script data-source-type="stream-source">')
             .replace(/<\/stream-source>/gi, '</script>');
 
-          await fse.ensureDir(dirname(outputFile));
-          await fse.writeFile(outputFile, outputHtml, 'utf8');
+          if (!fs.existsSync(dirname(outputFile))) {
+            fs.mkdirSync(dirname(outputFile), { recursive: true });
+          }
+          fs.writeFileSync(outputFile, outputHtml, 'utf8');
+
+          glob(`${this.buildDir}/.tmp*.*`, {}, (err, files) => {
+            if (err) throw err;
+            files.map(file => fs.unlinkSync(file, () => {}));
+          });
 
           resolve(outputHtml);
         });
