@@ -7,7 +7,6 @@ import glob from 'glob';
 import crypto from 'crypto';
 
 const importExportRegex = /(?:import|export)\s(?:["'\s]*[\w*{}\$\n\r\t, ]+from\s*)?["'\s]*([^"']+)["'\s]/gm;
-const importRegex = /(?<!@)import\s(?:["'\s]*[\w*{}\$\n\r\t, ]+from\s*)?["'\s]*([^"']+)["'\s]/gm;
 
 export const getRandomInt = (max, min = 0) => Math.floor(Math.random() * (max - min + 1)) + min;
 export const getUp = (from) => from.replace(/\\/g, '/').slice(0, from.indexOf('**')).match(/\//g).length;
@@ -102,25 +101,46 @@ export const prodCopyCompile = ({ from, to, buildMode, module }) => new Promise(
   });
 });
 
+const sassExtensions = ['', '.sass', '.scss'];
 const jsExtenstions = ['', '.js', '.mjs', '.jsx'];
-export const cacheHash = (source, { sourcePath, type, name = false }) => {
-  const matches = [...source.matchAll(importRegex)]
+const importJSRegex = /(?<!@)import\s(?:["'\s]*[\w*{}\$\n\r\t, ]+from\s*)?["'\s]*([^"']+)["'\s]/gm;
+const importSassRegex = /(?:@import ["'])(\S+)(?:["'];)/g;
+
+export const cacheHash = (source, { sourcePath, type }) => {
+  let hashes = [];
+  let importSource;
+  const regex = type === 'scss' ? importSassRegex : importJSRegex;
+  const exts = type === 'scss' ? sassExtensions : jsExtenstions;
+  const addUnderscore = (path) => importSource.replace(/([\/\\])(\w+)$/gi, '$1_$2');
+
+  const matches = [...source.matchAll(regex)]
     .filter((match) => match[1][0] === '.' || isAbsolute(match[1]));
 
-  let hashes = [];
   if (matches && matches.length) {
     hashes = matches
       .map((match) => {
-        let importSource = isAbsolute(match[1]) ? match[1] : resolve(sourcePath, match[1]);
+        importSource = isAbsolute(match[1]) ? match[1] : resolve(sourcePath, match[1]);
 
         if (existsSync(importSource) && statSync(importSource).isDirectory()) {
           importSource = resolve(importSource, 'index');
         }
 
-        for (const ext of jsExtenstions) {
+        for (const ext of exts) {
           if (existsSync(`${importSource}${ext}`) && statSync(`${importSource}${ext}`).isFile()) {
             const source = readFileSync(`${importSource}${ext}`);
-            return cacheHash(source.toString(), { sourcePath: dirname(importSource), type, name: match[1] });
+            const hash = cacheHash(source.toString(), { sourcePath: dirname(importSource), type });
+            return hash;
+          }
+        }
+
+        if (type === 'scss') {
+          importSource = addUnderscore(importSource);
+          for (const ext of exts) {
+            if (existsSync(`${importSource}${ext}`) && statSync(`${importSource}${ext}`).isFile()) {
+              const source = readFileSync(`${importSource}${ext}`);
+              const hash = cacheHash(source.toString(), { sourcePath: dirname(importSource), type });
+              return hash;
+            }
           }
         }
       });
@@ -130,6 +150,7 @@ export const cacheHash = (source, { sourcePath, type, name = false }) => {
 };
 
 export const executeDev = ({ pkg }) => new Promise(res => {
+  console.log(pkg);
   const execString = `npm i --no-save --no-optional ${pkg}`;
   exec(execString, error => {
     res(error);
