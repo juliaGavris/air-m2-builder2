@@ -1,12 +1,23 @@
 # air-m2-builder2
 
-## Использование
+1. [Install](#install)
+2. [Configuration](#configuration)
+3. [Dependencies](#dependencies)
+3. [Compilation](#compilation)
+    * [Scss](#scss)
+    * [View-source](#view-source)
+    * [Stream-source](#stream-source)
+    * [React-source](#react-source)
+4. [Cash](#cash)
 
-### Установка
+
+## Install
 
 `npm install air-m2-builder2 --save-dev`
 
-### Подключение
+## Configuration
+
+#### Подключение
 
 ```json
 {
@@ -17,23 +28,7 @@
 }
 ```
 
-### Запуск
-
-`npm run dev`
-
-#### Параметры запуска
-
-- `--revision 111` - номер ревизии
-- `--dev-server` - запуск отладочного сервера
-- `--build-mode [production|development]` - режим сборки скриптов webpack
-- `--m2units m2unit.prod` - переопределит зависимости
-- `--direct-dependencies-only` - поиск и сборка только прямых зависемостей (из корня текущего проекта в файлах m2units.json и/или package.json#m2units)
-
-### Командная строка
-
-- `clear cache [all|key]` - очищает кэш установки целиком, если без параметров или `all`, или конкретный ключ `key`
-
-## Конфигурация
+#### Конфигурация
 
 `air-m2.config.json`
 
@@ -48,11 +43,29 @@
 Модуль, путь к которому удовлетворит условию регулярного выражения `regex`, будет выдан с задержкой `delay`.
 Поиск срабатывает только по первому совпадению.
 
-## Точка входа
+#### Запуск
+
+`npm run dev`
+
+#### Параметры запуска
+
+- `--revision 111` - номер ревизии
+- `--dev-server` - запуск отладочного сервера
+- `--build-mode [production|development]` - режим сборки скриптов webpack
+- `--m2units m2unit.prod` - переопределит зависимости
+- `--direct-dependencies-only` - поиск и сборка только прямых зависемостей (из корня текущего проекта в файлах m2units.json и/или package.json#m2units)
+
+## Dependencies
+
+## Compilation
+
+### Точка входа
 
 `lib/m2.js` и `lib/m2.html` - будут найдены в корне проекта.
 
-## Встроенные стили
+### Compile HTML
+
+#### Scss
 
 Можно подключать стили, написанные с препроцессором SASS/SCSS, прямо в html страницу.
 Для этого в любом месте кода нужно создать тег `style` с обязательным указанием атрибута `type="text/scss"`.
@@ -67,9 +80,29 @@
 </style>
 ```
 
-#### Компиляция стилей
-при компиляции стилей url(<адрес изображения>) заменяется на /* \<image url="${<адрес изображения>}"> */,
+При компиляции стилей url(<адрес изображения>) заменяется на /* \<image url="${<адрес изображения>}"> */,
 для замены на фронте регулярками
+
+#### View-source
+
+Можно подключать view-source внутри html, который компилируется в инлайновый скрипт с data-source-type="view-source". 
+Внутри view-source можно импортировать данные из других модулей. При первой компиляции данные сохраняются к кэше 
+<project-name>/node-modules/.cache и при обновлении страницы берутся из него. 
+
+#### Stream-source
+
+Можно подключать stream-source внутри html, который компилируется в инлайновый скрипт с data-source-type="stream-source". 
+
+#### React-source
+
+Для использования ReactJs используется тэг react-source. Компилируется в инлайновый скрипт внутри html. 
+
+## Cash
+
+#### Командная строка
+
+- `clear cache [all|key]` - очищает кэш установки целиком, если без параметров или `all`, или конкретный ключ `key`
+
 
 ## Supported env's vars
 STATIC_VERSION
