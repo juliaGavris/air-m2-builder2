@@ -8,7 +8,7 @@
     * [View-source](#view-source)
     * [Stream-source](#stream-source)
     * [React-source](#react-source)
-4. [Cash](#cash)
+4. [Cache](#cache)
 
 
 ## Install
@@ -104,7 +104,7 @@
 
 Для использования ReactJs используется тэг react-source. Компилируется в инлайновый скрипт внутри html. 
 
-## Cash
+## Cache
 
 #### Командная строка
 
